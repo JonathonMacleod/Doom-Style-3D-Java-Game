@@ -13,7 +13,7 @@ public class Application extends Canvas {
 
 	private final int maxEntities = 256;
 	private final Entity[] entities = new Entity[maxEntities];
-	private final RenderPane3D renderPane = new RenderPane3D(800, 480, new Camera(60.0f), 0.1f, 1000.0f);
+	private final RenderPane3D renderPane = new RenderPane3D(400, 240, new Camera(60.0f), 0.1f, 1000.0f);
 
 	private final JFrame jframe;
 	private int applicationWidth, applicationHeight;
@@ -76,6 +76,7 @@ public class Application extends Canvas {
 		long lastTickTime = System.currentTimeMillis();
 		long lastLoopTime = System.nanoTime();
 		
+		boolean allowUnlimitedFPS = true;
 		long maxNanosecondsBetweenRenders = 1000000000 / 60;
 		long maxNanosecondsBetweenUpdates = 1000000000 / 60;
 				
@@ -97,7 +98,7 @@ public class Application extends Canvas {
 			}
 			
 			// Render the latest frame
-			if(nanosecondsSinceLastRender >= maxNanosecondsBetweenRenders) {
+			if(allowUnlimitedFPS || (nanosecondsSinceLastRender >= maxNanosecondsBetweenRenders)) {
 				nanosecondsSinceLastRender -= maxNanosecondsBetweenRenders;
 				renderGame();
 				currentFps++;
@@ -158,7 +159,7 @@ public class Application extends Canvas {
 	}
 	
 	private void updateGame(double delta) {
-		renderPane.camera.angle += 0.00001 * 2 * Math.PI * delta;
+		renderPane.camera.angle += 0.01 * 2 * Math.PI * delta;
 	}
 	
 	private void renderGame() {
@@ -167,7 +168,7 @@ public class Application extends Canvas {
 		
 		// Clear, draw to, and display the render pane on the canvas draw graphics
 		renderPane.clear();
-		renderPane.drawFloorAndCeiling(2, 4, 8);
+		renderPane.drawFloorAndCeiling(2, 4, 32);
 		for(int i = 0; i < maxEntities; i++) {
 			renderPane.drawEntity(entities[i]);
 		}

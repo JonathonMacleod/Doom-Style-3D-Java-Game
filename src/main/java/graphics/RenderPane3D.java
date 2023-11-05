@@ -42,27 +42,34 @@ public class RenderPane3D extends RenderPane {
 	
 	public void drawFloorAndCeiling(float floorDepth, float ceilingHeight, int tileSize) {
 		for(int yPixel = 0; yPixel < height; yPixel++) {
+			// Translate the current y pixel position to the bounds -(height / 2) to (height / 2)
 			final float relativeScreenY = ((yPixel - (height / 2.0f)) / (height / 2.0f));
 
-			boolean isFloor = true;
-			float relativeScreenZ = ((floorDepth * tileSize) - camera.z) / relativeScreenY;
-			if(relativeScreenY < 0) {
-				isFloor = false;
+			// Since we are in the bounds -(height / 2) to (height / 2), anything positive is the floor, anything negative is the ceiling
+			boolean isFloor = (relativeScreenY >= 0);
+			float relativeScreenZ = 0;
+			if(isFloor) {
+				// Find the relative Z position of the pixel once projected by calculating the ceiling position and applying the bounded Y position
 				relativeScreenZ = ((ceilingHeight * tileSize) + camera.z) / -relativeScreenY;
+			} else {
+				// Find the relative Z position of the pixel once projected by calculating the floor position and applying the bounded Y position
+				relativeScreenZ = ((floorDepth * tileSize) - camera.z) / relativeScreenY;
 			}
 			
 			for(int xPixel = 0; xPixel < width; xPixel++) {
+				// Translate the current X pixel to -(width / 2) to (width / 2) and project by the Z position calculated earlier
 				float relativeScreenX = (((width / 2.0f) - xPixel) / (width / 2.0f)) * relativeScreenZ;
 				
+				// Translate the projected position of the current floor/ceiling pixel, and move it to 0 to width and 0 to height bounds
 				float worldX = (float) (relativeScreenX * Math.cos(camera.angle) + relativeScreenZ * Math.sin(camera.angle) + (width / 2.0f) * tileSize);
 				float worldY = (float) (relativeScreenZ * Math.cos(camera.angle) - relativeScreenX * Math.sin(camera.angle) + (height / 2.0f) * tileSize);
 				
-				int xPix = (int) (worldX);
-				int yPix = (int) (worldY);
+				int textureCol = (int) (worldX % tileSize);
+				int textureRow = (int) (worldY % tileSize);
 				
-				int red = (int) (255 * xPix % tileSize);
-				int green = isFloor ? (int) (255 * yPix % tileSize) : 0;
-				int blue = isFloor ? 0 : (int) (255 * yPix % tileSize);
+				int red = (int) (255 * textureCol / tileSize);
+				int green = isFloor ? (int) (255 * textureRow / tileSize) : 0;
+				int blue = isFloor ? 0 : (int) (255 * textureRow / tileSize);
 				
 				int colour = (255 << 24 | red << 16 | green << 8 | blue);
 				setPixel(xPixel, yPixel, relativeScreenZ, colour);
