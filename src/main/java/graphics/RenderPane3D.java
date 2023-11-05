@@ -40,6 +40,36 @@ public class RenderPane3D extends RenderPane {
 		pixels[pixelIndex] = colour;
 	}
 	
+	public void drawFloorAndCeiling(float floorDepth, float ceilingHeight, int tileSize) {
+		for(int yPixel = 0; yPixel < height; yPixel++) {
+			final float relativeScreenY = ((yPixel - (height / 2.0f)) / (height / 2.0f));
+
+			boolean isFloor = true;
+			float relativeScreenZ = ((floorDepth * tileSize) - camera.z) / relativeScreenY;
+			if(relativeScreenY < 0) {
+				isFloor = false;
+				relativeScreenZ = ((ceilingHeight * tileSize) + camera.z) / -relativeScreenY;
+			}
+			
+			for(int xPixel = 0; xPixel < width; xPixel++) {
+				float relativeScreenX = (((width / 2.0f) - xPixel) / (width / 2.0f)) * relativeScreenZ;
+				
+				float worldX = (float) (relativeScreenX * Math.cos(camera.angle) + relativeScreenZ * Math.sin(camera.angle) + (width / 2.0f) * tileSize);
+				float worldY = (float) (relativeScreenZ * Math.cos(camera.angle) - relativeScreenX * Math.sin(camera.angle) + (height / 2.0f) * tileSize);
+				
+				int xPix = (int) (worldX);
+				int yPix = (int) (worldY);
+				
+				int red = (int) (255 * xPix % tileSize);
+				int green = isFloor ? (int) (255 * yPix % tileSize) : 0;
+				int blue = isFloor ? 0 : (int) (255 * yPix % tileSize);
+				
+				int colour = (255 << 24 | red << 16 | green << 8 | blue);
+				setPixel(xPixel, yPixel, relativeScreenZ, colour);
+			}
+		}
+	}
+	
 	public void drawEntity(Entity entity) {
 		// Get the entity position relative to the camera
 		final float entityRelativeX = (float) (entity.x - camera.x);

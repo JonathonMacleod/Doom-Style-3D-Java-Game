@@ -158,7 +158,7 @@ public class Application extends Canvas {
 	}
 	
 	private void updateGame(double delta) {
-		renderPane.camera.angle += 0.1 * 2 * Math.PI * delta;
+		renderPane.camera.angle += 0.00001 * 2 * Math.PI * delta;
 	}
 	
 	private void renderGame() {
@@ -167,6 +167,7 @@ public class Application extends Canvas {
 		
 		// Clear, draw to, and display the render pane on the canvas draw graphics
 		renderPane.clear();
+		renderPane.drawFloorAndCeiling(2, 4, 8);
 		for(int i = 0; i < maxEntities; i++) {
 			renderPane.drawEntity(entities[i]);
 		}
