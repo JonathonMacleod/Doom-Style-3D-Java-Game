@@ -72,7 +72,7 @@ public class RenderPane3D extends RenderPane {
 				int blue = isFloor ? 0 : (int) (255 * textureRow / tileSize);
 				
 				int colour = (255 << 24 | red << 16 | green << 8 | blue);
-				setPixel(xPixel, yPixel, relativeScreenZ, colour);
+				setPixel(xPixel, yPixel, -relativeScreenZ, colour);
 			}
 		}
 	}
@@ -136,7 +136,7 @@ public class RenderPane3D extends RenderPane {
 		for(int i = 0; i < pixels.length; i++) {
 			final float z = zBuffer[i];
 						
-			if(z <= -maxRenderDistance) {
+			if(z >= maxRenderDistance) {
 				pixels[i] = fogColour;
 			} else {
 				final int sourceColour = pixels[i];
@@ -145,7 +145,7 @@ public class RenderPane3D extends RenderPane {
 				final int sourceGreen = (sourceColour & 0x0000ff00) >> 8;
 				final int sourceBlue = (sourceColour & 0x000000ff);
 				
-				final float fogAlpha = (-z / maxRenderDistance) * fogStrength;
+				final float fogAlpha = (z / maxRenderDistance) * fogStrength;
 				
 				final int resultRed = (int) ((sourceRed * (1.0f - fogAlpha)) + (fogRed * fogAlpha));
 				final int resultGreen = (int) ((sourceGreen * (1.0f - fogAlpha)) + (fogGreen * fogAlpha));

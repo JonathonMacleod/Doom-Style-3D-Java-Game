@@ -13,7 +13,7 @@ public class Application extends Canvas {
 
 	private final int maxEntities = 256;
 	private final Entity[] entities = new Entity[maxEntities];
-	private final RenderPane3D renderPane = new RenderPane3D(400, 240, new Camera(60.0f), 0.1f, 400.0f);
+	private final RenderPane3D renderPane = new RenderPane3D(400, 240, new Camera(60.0f), 0.1f, 250.0f);
 
 	private final JFrame jframe;
 	private int applicationWidth, applicationHeight;
