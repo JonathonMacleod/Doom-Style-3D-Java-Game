@@ -128,4 +128,33 @@ public class RenderPane3D extends RenderPane {
 		}
 	}
 	
+	public void applyFog(int fogColour, float fogStrength) {
+		final int fogRed = (fogColour & 0x00ff0000) >> 16;
+		final int fogGreen = (fogColour & 0x0000ff00) >> 8;
+		final int fogBlue = (fogColour & 0x000000ff);
+		
+		for(int i = 0; i < pixels.length; i++) {
+			final float z = zBuffer[i];
+						
+			if(z <= -maxRenderDistance) {
+				pixels[i] = fogColour;
+			} else {
+				final int sourceColour = pixels[i];
+				
+				final int sourceRed = (sourceColour & 0x00ff0000) >> 16;
+				final int sourceGreen = (sourceColour & 0x0000ff00) >> 8;
+				final int sourceBlue = (sourceColour & 0x000000ff);
+				
+				final float fogAlpha = (-z / maxRenderDistance) * fogStrength;
+				
+				final int resultRed = (int) ((sourceRed * (1.0f - fogAlpha)) + (fogRed * fogAlpha));
+				final int resultGreen = (int) ((sourceGreen * (1.0f - fogAlpha)) + (fogGreen * fogAlpha));
+				final int resultBlue = (int) ((sourceBlue * (1.0f - fogAlpha)) + (fogBlue * fogAlpha));
+				final int resultArgb = ((255 << 24) | (resultRed << 16) | (resultGreen << 8) | resultBlue);
+				
+				pixels[i] = resultArgb;
+			}
+		}
+	}
+	
 }
