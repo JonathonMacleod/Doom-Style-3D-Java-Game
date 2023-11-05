@@ -98,7 +98,7 @@ public class RenderPane3D extends RenderPane {
 		
 		// Calculate the boundaries of the entity drawn on the screen
 		final int pushBackZ = (int) (height / entityRelativeZ);
-		final int screenEntityLeft = (int) (screenEntityX - 16);
+		final int screenEntityLeft = (int) (screenEntityX - pushBackZ);
 		final int screenEntityRight = (int) (screenEntityX + pushBackZ);
 		final int screenEntityTop = (int) (screenEntityY - pushBackZ);
 		final int screenEntityBottom = (int) (screenEntityY + pushBackZ);
