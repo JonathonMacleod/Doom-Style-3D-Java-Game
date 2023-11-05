@@ -27,6 +27,24 @@ public class RenderPane {
 	
 	public void setPixel(int x, int y, int colour) { pixels[x + y * width] = colour; }
 	
+	public void drawRectangle(int x, int y, int width, int height, int colour) {
+		for(int yp = y; yp < (y + height); yp++) {
+			if(yp < 0)
+				continue;
+			if(yp >= this.height)
+				break;
+			
+			for(int xp = x; xp < (x + width); xp++) {
+				if(xp < 0)
+					continue;
+				if(xp >= this.width)
+					break;
+				
+				setPixel(xp, yp, colour);
+			}
+		}
+	}
+	
 	public BufferedImage getBufferedImage() { return bufferedImage; }
 	
 }
