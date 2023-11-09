@@ -1,5 +1,3 @@
-import graphics.Application;
-
 public class Start {
 
 	// https://permadi.com/activity/ray-casting-game-engine-demo/

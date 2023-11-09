@@ -1,42 +1,28 @@
-package graphics;
 
-import java.awt.Canvas;
-import java.awt.Color;
+
 import java.awt.Graphics;
+import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
 import java.util.Random;
 
-import javax.swing.JFrame;
+import graphics.Camera;
+import graphics.Entity;
+import graphics.RenderPane3D;
+import graphics.Sprite;
+import ui.Window;
 
-public class Application extends Canvas {
-	private static final long serialVersionUID = 1L;
+public class Application {
 
 	private final int maxEntities = 256;
 	private final Entity[] entities = new Entity[maxEntities];
 	private final RenderPane3D renderPane = new RenderPane3D(400, 240, new Camera(60.0f), 0.1f, 250.0f);
-
-	private final JFrame jframe;
-	private int applicationWidth, applicationHeight;
 	
+	private final Window window;
 	private final Thread mainGameThread;
 	private volatile boolean isGameRunning = false;
 	
 	public Application(String title, int width, int height) {
-		applicationWidth = width;
-		applicationHeight = height;
-		
-		// Set canvas dimensions and create buffer strategy
-		setSize(width, height);
-		
-		// Create a JFrame window
-		jframe = new JFrame();
-		jframe.add(this);
-		jframe.pack();
-		jframe.setResizable(false);
-		jframe.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		jframe.setLocationRelativeTo(null);
-		jframe.setTitle(title);
-		jframe.setVisible(true);
+		window = new Window(title, width, height);
 
 		// Create the main game thread (but don't invoke it)
 		mainGameThread = new Thread(() -> {
@@ -118,9 +104,6 @@ public class Application extends Canvas {
 	}
 	
 	private void onStartup() {
-		// Create a buffer strategy for the canvas that we can draw to
-		createBufferStrategy(2);
-
 		final int RED = 0xffff0000;
 		final int GRE = 0xff00ff00;
 		final int BLU = 0xff0000ff;
@@ -159,12 +142,22 @@ public class Application extends Canvas {
 	}
 	
 	private void updateGame(double delta) {
-		renderPane.camera.angle += 0.01 * 2 * Math.PI * delta;
+		int xMovement = 0, zMovement = 0;
+		if(window.inputHandler.keyStates[KeyEvent.VK_W]) zMovement -= 1;
+		if(window.inputHandler.keyStates[KeyEvent.VK_S]) zMovement += 1;
+		if(window.inputHandler.keyStates[KeyEvent.VK_A]) xMovement += 1;
+		if(window.inputHandler.keyStates[KeyEvent.VK_D]) xMovement -= 1;
+
+		final float speed = 0.1f;
+		renderPane.camera.x += (xMovement * speed);
+		renderPane.camera.z += (zMovement * speed);
+		
+//		renderPane.camera.angle += 0.01 * 2 * Math.PI * delta;
 	}
 	
 	private void renderGame() {
-		final BufferStrategy bufferStrategy = getBufferStrategy();
-		final Graphics graphics = bufferStrategy.getDrawGraphics();
+		final BufferStrategy bufferStrategy = window.getBufferStrategy();
+		final Graphics graphics = window.getDrawGraphics();
 		
 		// Clear, draw to, and display the render pane on the canvas draw graphics
 		renderPane.clear();
@@ -173,7 +166,7 @@ public class Application extends Canvas {
 			renderPane.drawEntity(entities[i]);
 		}
 		renderPane.applyFog(0xff010401, 1f);
-		graphics.drawImage(renderPane.getBufferedImage(), 0, 0, applicationWidth, applicationHeight, null);
+		graphics.drawImage(renderPane.getBufferedImage(), 0, 0, window.getWidth(), window.getHeight(), null);
 		
 		graphics.dispose();
 		bufferStrategy.show();

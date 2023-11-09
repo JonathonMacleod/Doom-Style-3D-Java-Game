@@ -50,19 +50,19 @@ public class RenderPane3D extends RenderPane {
 			float relativeScreenZ = 0;
 			if(isFloor) {
 				// Find the relative Z position of the pixel once projected by calculating the ceiling position and applying the bounded Y position
-				relativeScreenZ = ((ceilingHeight * tileSize) + camera.z) / -relativeScreenY;
+				relativeScreenZ = (ceilingHeight * tileSize) / -relativeScreenY;
 			} else {
 				// Find the relative Z position of the pixel once projected by calculating the floor position and applying the bounded Y position
-				relativeScreenZ = ((floorDepth * tileSize) - camera.z) / relativeScreenY;
+				relativeScreenZ = (floorDepth * tileSize) / relativeScreenY;
 			}
 			
 			for(int xPixel = 0; xPixel < width; xPixel++) {
 				// Translate the current X pixel to -(width / 2) to (width / 2) and project by the Z position calculated earlier
-				float relativeScreenX = (((width / 2.0f) - xPixel) / (width / 2.0f)) * relativeScreenZ;
+				float relativeScreenX = ((xPixel - (width / 2.0f)) / (width / 2.0f)) * relativeScreenZ;
 				
 				// Translate the projected position of the current floor/ceiling pixel, and move it to 0 to width and 0 to height bounds
-				float worldX = (float) (relativeScreenX * Math.cos(camera.angle) + relativeScreenZ * Math.sin(camera.angle) + (width / 2.0f) * tileSize);
-				float worldY = (float) (relativeScreenZ * Math.cos(camera.angle) - relativeScreenX * Math.sin(camera.angle) + (height / 2.0f) * tileSize);
+				float worldX = (float) (relativeScreenX * Math.cos(camera.angle) + relativeScreenZ * Math.sin(camera.angle) + (width / 2.0f) * tileSize) + camera.x;
+				float worldY = (float) (relativeScreenZ * Math.cos(camera.angle) - relativeScreenX * Math.sin(camera.angle) + (height / 2.0f) * tileSize) + camera.z;
 				
 				int textureCol = (int) (worldX % tileSize);
 				int textureRow = (int) (worldY % tileSize);
