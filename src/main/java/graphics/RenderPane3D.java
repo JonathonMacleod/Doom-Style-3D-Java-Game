@@ -81,7 +81,7 @@ public class RenderPane3D extends RenderPane {
 	
 	public void drawEntity(Entity entity) {
 		// Get the entity position relative to the camera
-		final float entityRelativeX = (float) (entity.x + camera.x);
+		final float entityRelativeX = (float) (entity.x - camera.x);
 		final float entityRelativeY = (float) (entity.y + camera.y);
 		final float entityRelativeZ = (float) (entity.z + camera.z);
 		
@@ -99,7 +99,7 @@ public class RenderPane3D extends RenderPane {
 		final float screenEntityY = (height / 2.0f) + (relativeEntityY / relativeEntityZ) * (height / 2.0f);
 		
 		// Calculate the boundaries of the entity drawn on the screen
-		final int pushBackZ = (int) (height / entityRelativeZ);
+		final int pushBackZ = (int) (entity.sprite.width / 1); //entityRelativeZ);
 		final int screenEntityLeft = (int) (screenEntityX - pushBackZ);
 		final int screenEntityRight = (int) (screenEntityX + pushBackZ);
 		final int screenEntityTop = (int) (screenEntityY - pushBackZ);
