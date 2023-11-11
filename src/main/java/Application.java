@@ -129,9 +129,9 @@ public class Application {
 			RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
 		});
 		for(int i = 0; i < maxEntities; i++) {
-			final float x = random.nextFloat(-100, 100);
-			final float y = random.nextFloat(-100, 100);
-			final float z = random.nextFloat(-100, 100);
+			final float x = 100; // random.nextFloat(-100, 100);
+			final float y = 40; // random.nextFloat(-100, 100);
+			final float z = 100; //random.nextFloat(-100, 100);
 			final Entity entity = new Entity(x, y, z, sprite);
 			entities[i] = entity;
 		}
@@ -148,11 +148,14 @@ public class Application {
 		if(window.inputHandler.keyStates[KeyEvent.VK_A]) xMovement += 1;
 		if(window.inputHandler.keyStates[KeyEvent.VK_D]) xMovement -= 1;
 
-		final float speed = 0.1f;
-		renderPane.camera.x += (xMovement * speed);
-		renderPane.camera.z += (zMovement * speed);
+		final float rotationSpeed = (float) ((2 * Math.PI) * 0.0075f);
+		if(window.inputHandler.keyStates[KeyEvent.VK_LEFT]) renderPane.camera.angle -= rotationSpeed;
+		if(window.inputHandler.keyStates[KeyEvent.VK_RIGHT]) renderPane.camera.angle += rotationSpeed;
 		
-//		renderPane.camera.angle += 0.01 * 2 * Math.PI * delta;
+		final float speed = 0.45f;
+		renderPane.camera.applyAxisMovements(xMovement * speed, 0, zMovement * speed);
+		
+		System.out.println("Player X: " + renderPane.camera.x + ", Y: " + renderPane.camera.y + ", Z: " + renderPane.camera.z);
 	}
 	
 	private void renderGame() {

@@ -57,12 +57,14 @@ public class RenderPane3D extends RenderPane {
 			}
 			
 			for(int xPixel = 0; xPixel < width; xPixel++) {
+				final float fovDistortion = 1 * (float) Math.sin(Math.abs((xPixel - (width / 2.0f)) / (width * 2.0f)) * (camera.fovRadians / 2.0f));
+				
 				// Translate the current X pixel to -(width / 2) to (width / 2) and project by the Z position calculated earlier
 				float relativeScreenX = ((xPixel - (width / 2.0f)) / (width / 2.0f)) * relativeScreenZ;
 				
 				// Translate the projected position of the current floor/ceiling pixel, and move it to 0 to width and 0 to height bounds
 				float worldX = (float) (relativeScreenX * Math.cos(camera.angle) + relativeScreenZ * Math.sin(camera.angle) + (width / 2.0f) * tileSize) + camera.x;
-				float worldY = (float) (relativeScreenZ * Math.cos(camera.angle) - relativeScreenX * Math.sin(camera.angle) + (height / 2.0f) * tileSize) + camera.z;
+				float worldY = (float) (relativeScreenZ * Math.cos(camera.angle) - relativeScreenX * Math.sin(camera.angle) + (height / 2.0f) * tileSize) - fovDistortion + camera.z;
 				
 				int textureCol = (int) (worldX % tileSize);
 				int textureRow = (int) (worldY % tileSize);
@@ -79,21 +81,21 @@ public class RenderPane3D extends RenderPane {
 	
 	public void drawEntity(Entity entity) {
 		// Get the entity position relative to the camera
-		final float entityRelativeX = (float) (entity.x - camera.x);
-		final float entityRelativeY = (float) (entity.y - camera.y);
-		final float entityRelativeZ = (float) (entity.z - camera.z);
+		final float entityRelativeX = (float) (entity.x + camera.x);
+		final float entityRelativeY = (float) (entity.y + camera.y);
+		final float entityRelativeZ = (float) (entity.z + camera.z);
 		
 		// Rotate the entity location around the camera (relative to the camera angle)
-		final float relativeEntityX = (float) ((entityRelativeX * Math.cos(camera.angle)) - (entityRelativeZ * Math.sin(camera.angle)));
+		final float relativeEntityX = (float) ((entityRelativeX * Math.cos(-camera.angle)) - (entityRelativeZ * Math.sin(-camera.angle)));
 		final float relativeEntityY = entityRelativeY;
-		final float relativeEntityZ = (float) ((entityRelativeZ * Math.cos(camera.angle)) + (entityRelativeX * Math.sin(camera.angle)));
+		final float relativeEntityZ = (float) ((entityRelativeZ * Math.cos(-camera.angle)) + (entityRelativeX * Math.sin(-camera.angle)));
 		
 		// Check that the entity is in-front of the camera
 		if(relativeEntityZ < minRenderDistance) 
 			return;
 		
 		// Calculate the position of the entity on the screen
-		final float screenEntityX = (width / 2.0f) - (relativeEntityX / relativeEntityZ * (width / 2.0f));
+		final float screenEntityX = (width / 2.0f) - (relativeEntityX / relativeEntityZ) * (width / 2.0f);
 		final float screenEntityY = (height / 2.0f) + (relativeEntityY / relativeEntityZ) * (height / 2.0f);
 		
 		// Calculate the boundaries of the entity drawn on the screen
@@ -144,12 +146,13 @@ public class RenderPane3D extends RenderPane {
 				final int sourceRed = (sourceColour & 0x00ff0000) >> 16;
 				final int sourceGreen = (sourceColour & 0x0000ff00) >> 8;
 				final int sourceBlue = (sourceColour & 0x000000ff);
+
+//				int colour = 0xff000000 | (int) (255 * ((maxRenderDistance + relativeScreenZ) / maxRenderDistance));
+				final float fogAlpha = ((maxRenderDistance - z) / maxRenderDistance) * fogStrength;
 				
-				final float fogAlpha = (z / maxRenderDistance) * fogStrength;
-				
-				final int resultRed = (int) ((sourceRed * (1.0f - fogAlpha)) + (fogRed * fogAlpha));
-				final int resultGreen = (int) ((sourceGreen * (1.0f - fogAlpha)) + (fogGreen * fogAlpha));
-				final int resultBlue = (int) ((sourceBlue * (1.0f - fogAlpha)) + (fogBlue * fogAlpha));
+				final int resultRed = (int) ((sourceRed * fogAlpha) + (fogRed * (1.0f - fogAlpha)));
+				final int resultGreen = (int) ((sourceGreen * fogAlpha) + (fogGreen * (1.0f - fogAlpha)));
+				final int resultBlue = (int) ((sourceBlue * fogAlpha) + (fogBlue * (1.0f - fogAlpha)));
 				final int resultArgb = ((255 << 24) | (resultRed << 16) | (resultGreen << 8) | resultBlue);
 				
 				pixels[i] = resultArgb;

@@ -14,4 +14,10 @@ public class Camera {
 		angle = 0;
 	}
 	
+	public void applyAxisMovements(float xDelta, float yDelta, float zDelta) {
+		x += (xDelta * Math.cos(angle) + zDelta * Math.sin(angle));
+		y += yDelta;
+		z += (zDelta * Math.cos(angle) - xDelta * Math.sin(angle));
+	}
+	
 }
