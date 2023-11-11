@@ -5,3 +5,5 @@ __This project is currently under development and despite what this file may say
 This project contains the source code for a 3D game, which uses software rendering techniques similar to those seen in the Doom (1992) video game.
 
 The game is written using Java, and constructed as a Maven project.
+
+![Image of Development Progress](./assets/branding/Development_Progress_1.jpg)

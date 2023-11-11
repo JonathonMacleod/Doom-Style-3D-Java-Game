@@ -15,7 +15,7 @@ public class Application {
 
 	private final int maxEntities = 256;
 	private final Entity[] entities = new Entity[maxEntities];
-	private final RenderPane3D renderPane = new RenderPane3D(400, 240, new Camera(60.0f), 0.1f, 2050.0f);
+	private final RenderPane3D renderPane = new RenderPane3D(400, 240, new Camera(60.0f), 0.1f, 250.0f);
 	
 	private final Window window;
 	private final Thread mainGameThread;
