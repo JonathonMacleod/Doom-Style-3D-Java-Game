@@ -129,9 +129,9 @@ public class Application {
 			RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
 		});
 		for(int i = 0; i < maxEntities; i++) {
-			final float x = random.nextFloat(-100, 100);
-			final float y = random.nextFloat(-100, 100);
-			final float z = random.nextFloat(-100, 100);
+			final float x = random.nextFloat(0, 100);
+			final float y = random.nextFloat(0, 100);
+			final float z = random.nextFloat(0, 100);
 			final Entity entity = new Entity(x, y, z, sprite);
 			entities[i] = entity;
 		}
@@ -142,26 +142,31 @@ public class Application {
 	}
 	
 	private void updateGame(double delta) {
+		// Apply rotation if the LEFT or RIGHT arrow keys are pressed
+		final float rotationSpeed = (float) ((2 * Math.PI) * 0.65f * delta);
+		if(window.inputHandler.keyStates[KeyEvent.VK_LEFT]) renderPane.camera.angle -= rotationSpeed;
+		if(window.inputHandler.keyStates[KeyEvent.VK_RIGHT]) renderPane.camera.angle += rotationSpeed;
+
+		// Work out the movement speed of the player (e.g. are they sprinting via the SHIFT key)
+		float movementSpeed = 36f;
+		if(window.inputHandler.keyStates[KeyEvent.VK_SHIFT]) movementSpeed = 64f;
+		
+		// Apply movement if the WASD keys are pressed
 		int xMovement = 0, zMovement = 0;
 		if(window.inputHandler.keyStates[KeyEvent.VK_W]) zMovement -= 1;
 		if(window.inputHandler.keyStates[KeyEvent.VK_S]) zMovement	 += 1;
 		if(window.inputHandler.keyStates[KeyEvent.VK_A]) xMovement += 1;
 		if(window.inputHandler.keyStates[KeyEvent.VK_D]) xMovement -= 1;
-
-		final float rotationSpeed = (float) ((2 * Math.PI) * 0.0075f);
-		if(window.inputHandler.keyStates[KeyEvent.VK_LEFT]) renderPane.camera.angle -= rotationSpeed;
-		if(window.inputHandler.keyStates[KeyEvent.VK_RIGHT]) renderPane.camera.angle += rotationSpeed;
-		
-		
-		final float speed = 0.45f;
+		final float speed = (float) (movementSpeed * delta);
 		renderPane.camera.applyAxisMovements(xMovement * speed, 0, zMovement * speed);
 		
-		System.out.println("Player X: " + renderPane.camera.x + ", Y: " + renderPane.camera.y + ", Z: " + renderPane.camera.z);
-
+		// Teleport the player to the center of the level if the player presses the X key
 		if(window.inputHandler.keyStates[KeyEvent.VK_X]) {
-			renderPane.camera.x = 100;
-			renderPane.camera.z = 100;
+			renderPane.camera.x = 0;
+			renderPane.camera.y = 0;
+			renderPane.camera.z = 0;
 		}
+		System.out.println("X: " + renderPane.camera.x + ", Y: " + renderPane.camera.y + ", Z: " + renderPane.camera.z);
 	}
 	
 	private void renderGame() {
@@ -174,6 +179,7 @@ public class Application {
 		for(int i = 0; i < maxEntities; i++) {
 			renderPane.drawEntity(entities[i]);
 		}
+		renderPane.drawBlock(1, 1);
 		renderPane.applyFog(0xff010401, 1f);
 		graphics.drawImage(renderPane.getBufferedImage(), 0, 0, window.getWidth(), window.getHeight(), null);
 		
