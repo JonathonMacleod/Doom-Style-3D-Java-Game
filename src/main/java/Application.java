@@ -129,9 +129,9 @@ public class Application {
 			RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
 		});
 		for(int i = 0; i < maxEntities; i++) {
-			final float x = random.nextFloat(0, 100);
+			final float x = random.nextFloat(-300, 300);
 			final float y = random.nextFloat(0, 100);
-			final float z = random.nextFloat(0, 100);
+			final float z = random.nextFloat(0, 200);
 			final Entity entity = new Entity(x, y, z, sprite);
 			entities[i] = entity;
 		}

@@ -71,10 +71,10 @@ public class RenderPane3D extends RenderPane {
 
 				int xPix = (int) (xx * 2);
 				int yPix = (int) (yy * 2);
-				int xTile = (int) ((xPix >> 4) / 16.0f * 255);
-				int yTile = (int) ((yPix >> 4) / 16.0f * 255);
+				int xTile = (int) ((Math.abs(xPix) % 16.0f) / 16.0f * 255);
+				int yTile = (int) ((Math.abs(yPix) % 16.0f) / 16.0f * 255);
 
-				setPixel(x, y, (float) zd * 4, xTile << 16 | yTile << 8);
+				setPixel(x, y, (float) zd * 4, (xTile << 16) | (yTile << 8));
 			}
 		}
 
