@@ -1,5 +1,8 @@
 package graphics;
 
+import utils.Level;
+import utils.Wall;
+
 public class RenderPane3D extends RenderPane {
 
 	private final float[] zBuffer;
@@ -40,6 +43,16 @@ public class RenderPane3D extends RenderPane {
 		pixels[pixelIndex] = colour;
 	}
 	
+	public void drawLevel(Level level) {
+		//TODO: Only draw within visible range of the player's position
+		for(int x = 0; x < level.tileMap.width; x++) {
+			for(int y = 0; y < level.tileMap.height; y++) {
+				final Wall levelWall = level.getLevelWall(x, y);
+				if(levelWall != null) drawBlock(levelWall, x, y);
+			}
+		}
+	}
+	
 	public void drawFloorAndCeiling(float floorDepth, float ceilingHeight, int tileSize) {
 		final float xCam = (float) ((camera.x / 32.0f) - Math.sin(-camera.angle) * 0.3f);
 		final float yCam = (float) ((-camera.z / 32.0f) - Math.cos(-camera.angle) * 0.3f);
@@ -55,10 +68,10 @@ public class RenderPane3D extends RenderPane {
 		for (int y = 0; y < height; y++) {
 			double yd = ((y + 0.5) - yCenter) / fov;
 
-			boolean floor = true;
+//			boolean floor = true;
 			double zd = (4 - zCam * 8) / yd;
 			if (yd < 0) {
-				floor = false;
+//				floor = false;
 				zd = (4 + zCam * 8) / -yd;
 			}
 
@@ -80,12 +93,12 @@ public class RenderPane3D extends RenderPane {
 
 	}
 	
-	public void drawBlock(double x, double z) {
+	public void drawBlock(Wall wall, double x, double z) {
 		final float tileSize = 1;
-		drawWall(x + tileSize, -z, x, -z, 0xffff0000);
-		drawWall(x, -z + tileSize, x + tileSize, -z + tileSize, 0xff00ff00);
-		drawWall(x, -z, x, -z + tileSize, 0xff0000ff);
-		drawWall(x + tileSize, -z + tileSize, x + tileSize, -z, 0xffffffff);
+		drawWall(x + tileSize, -z, x, -z, wall.colour);
+		drawWall(x, -z + tileSize, x + tileSize, -z + tileSize, wall.colour);
+		drawWall(x, -z, x, -z + tileSize, wall.colour);
+		drawWall(x + tileSize, -z + tileSize, x + tileSize, -z, wall.colour);
 	}
 	
 	public void drawWall(double x0, double y0, double x1, double y1, int colour) {

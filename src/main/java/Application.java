@@ -10,6 +10,7 @@ import graphics.Entity;
 import graphics.RenderPane3D;
 import graphics.Sprite;
 import ui.Window;
+import utils.Level;
 
 public class Application {
 
@@ -162,12 +163,14 @@ public class Application {
 		
 		// Teleport the player to the center of the level if the player presses the X key
 		if(window.inputHandler.keyStates[KeyEvent.VK_X]) {
-			renderPane.camera.x = 80;
+			renderPane.camera.x = 41 * 32 + 16;
 			renderPane.camera.y = 0;
-			renderPane.camera.z = 48;
+			renderPane.camera.z = 39 * 32 - 16;
 			renderPane.camera.angle = (float) Math.PI;
 		}
 	}
+	
+	Level level = new Level("level");
 	
 	private void renderGame() {
 		final BufferStrategy bufferStrategy = window.getBufferStrategy();
@@ -179,32 +182,7 @@ public class Application {
 		for(int i = 0; i < maxEntities; i++) {
 			renderPane.drawEntity(entities[i]);
 		}
-		renderPane.drawBlock(1, 1);
-		renderPane.drawBlock(2, 1);
-		renderPane.drawBlock(3, 1);
-		renderPane.drawBlock(3, 2);
-		renderPane.drawBlock(3, 3);
-		renderPane.drawBlock(1, 2);
-		renderPane.drawBlock(1, 3);
-		renderPane.drawBlock(0, 4);
-		renderPane.drawBlock(4, 4);
-		renderPane.drawBlock(-1, 4);
-		renderPane.drawBlock(5, 4);
-		renderPane.drawBlock(-2, 4);
-		renderPane.drawBlock(6, 4);
-		renderPane.drawBlock(-2, 5);
-		renderPane.drawBlock(6, 5);
-		renderPane.drawBlock(-2, 6);
-		renderPane.drawBlock(6, 6);
-		renderPane.drawBlock(-2, 7);
-		renderPane.drawBlock(6, 7);
-		renderPane.drawBlock(-1, 7);
-		renderPane.drawBlock(5, 7);
-		renderPane.drawBlock(0, 7);
-		renderPane.drawBlock(4, 7);
-		renderPane.drawBlock(1, 7);
-		renderPane.drawBlock(3, 7);
-		renderPane.drawBlock(2, 7);
+		renderPane.drawLevel(level);
 		renderPane.applyFog(0xff010401, 1f);
 		graphics.drawImage(renderPane.getBufferedImage(), 0, 0, window.getWidth(), window.getHeight(), null);
 		
