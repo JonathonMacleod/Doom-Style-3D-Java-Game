@@ -162,11 +162,11 @@ public class Application {
 		
 		// Teleport the player to the center of the level if the player presses the X key
 		if(window.inputHandler.keyStates[KeyEvent.VK_X]) {
-			renderPane.camera.x = 0;
+			renderPane.camera.x = 80;
 			renderPane.camera.y = 0;
-			renderPane.camera.z = 0;
+			renderPane.camera.z = 48;
+			renderPane.camera.angle = (float) Math.PI;
 		}
-		System.out.println("X: " + renderPane.camera.x + ", Y: " + renderPane.camera.y + ", Z: " + renderPane.camera.z);
 	}
 	
 	private void renderGame() {
@@ -180,6 +180,31 @@ public class Application {
 			renderPane.drawEntity(entities[i]);
 		}
 		renderPane.drawBlock(1, 1);
+		renderPane.drawBlock(2, 1);
+		renderPane.drawBlock(3, 1);
+		renderPane.drawBlock(3, 2);
+		renderPane.drawBlock(3, 3);
+		renderPane.drawBlock(1, 2);
+		renderPane.drawBlock(1, 3);
+		renderPane.drawBlock(0, 4);
+		renderPane.drawBlock(4, 4);
+		renderPane.drawBlock(-1, 4);
+		renderPane.drawBlock(5, 4);
+		renderPane.drawBlock(-2, 4);
+		renderPane.drawBlock(6, 4);
+		renderPane.drawBlock(-2, 5);
+		renderPane.drawBlock(6, 5);
+		renderPane.drawBlock(-2, 6);
+		renderPane.drawBlock(6, 6);
+		renderPane.drawBlock(-2, 7);
+		renderPane.drawBlock(6, 7);
+		renderPane.drawBlock(-1, 7);
+		renderPane.drawBlock(5, 7);
+		renderPane.drawBlock(0, 7);
+		renderPane.drawBlock(4, 7);
+		renderPane.drawBlock(1, 7);
+		renderPane.drawBlock(3, 7);
+		renderPane.drawBlock(2, 7);
 		renderPane.applyFog(0xff010401, 1f);
 		graphics.drawImage(renderPane.getBufferedImage(), 0, 0, window.getWidth(), window.getHeight(), null);
 		

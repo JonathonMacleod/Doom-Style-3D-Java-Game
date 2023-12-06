@@ -82,10 +82,10 @@ public class RenderPane3D extends RenderPane {
 	
 	public void drawBlock(double x, double z) {
 		final float tileSize = 1;
-		drawWall(x + tileSize, z, x, z, 0xffff0000);
-		drawWall(x, z + tileSize, x + tileSize, z + tileSize, 0xff00ff00);
-		drawWall(x, z, x, z + tileSize, 0xff0000ff);
-		drawWall(x + tileSize, z + tileSize, x + tileSize, z, 0xffffffff);
+		drawWall(x + tileSize, -z, x, -z, 0xffff0000);
+		drawWall(x, -z + tileSize, x + tileSize, -z + tileSize, 0xff00ff00);
+		drawWall(x, -z, x, -z + tileSize, 0xff0000ff);
+		drawWall(x + tileSize, -z + tileSize, x + tileSize, -z, 0xffffffff);
 	}
 	
 	public void drawWall(double x0, double y0, double x1, double y1, int colour) {

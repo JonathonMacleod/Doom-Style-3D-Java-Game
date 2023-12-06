@@ -8,10 +8,10 @@ public class Camera {
 	public Camera(float fovDegrees) {
 		fovRadians = (float) Math.toRadians(fovDegrees);
 		
-		x = 0;
+		x = 80;
 		y = 0;
-		z = 0;
-		angle = 0;
+		z = 48;
+		angle = (float) Math.PI;
 	}
 	
 	public void applyAxisMovements(float xDelta, float yDelta, float zDelta) {
