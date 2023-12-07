@@ -1,6 +1,7 @@
 package graphics;
 
 import utils.Level;
+import utils.Tile;
 import utils.Wall;
 
 public class RenderPane3D extends RenderPane {
@@ -44,6 +45,10 @@ public class RenderPane3D extends RenderPane {
 	}
 	
 	public void drawLevel(Level level) {
+		// Render the floor and ceiling
+		drawFloorAndCeiling(level, 2, 2, 16);
+		
+		// Draw the walls from the level tile map
 		//TODO: Only draw within visible range of the player's position
 		for(int x = 0; x < level.tileMap.width; x++) {
 			for(int y = 0; y < level.tileMap.height; y++) {
@@ -53,7 +58,7 @@ public class RenderPane3D extends RenderPane {
 		}
 	}
 	
-	public void drawFloorAndCeiling(float floorDepth, float ceilingHeight, int tileSize) {
+	public void drawFloorAndCeiling(Level level, float floorDepth, float ceilingHeight, int tileSize) {
 		final float xCam = (float) ((camera.x / 32.0f) - Math.sin(-camera.angle) * 0.3f);
 		final float yCam = (float) ((-camera.z / 32.0f) - Math.cos(-camera.angle) * 0.3f);
 		final float zCam = (float) (-0.2f - (camera.y / 32.0f));
@@ -82,12 +87,22 @@ public class RenderPane3D extends RenderPane {
 				double xx = xd * rCos + zd * rSin + xCam * 8;
 				double yy = zd * rCos - xd * rSin + yCam * 8;
 
-				int xPix = (int) (xx * 2);
+				int xPix = (int) (xx * 2); 
 				int yPix = (int) (yy * 2);
-				int xTile = (int) ((Math.abs(xPix) % 16.0f) / 16.0f * 255);
-				int yTile = (int) ((Math.abs(yPix) % 16.0f) / 16.0f * 255);
-
-				setPixel(x, y, (float) zd * 4, (xTile << 16) | (yTile << 8));
+				int xTile = (int) (xPix / tileSize);
+				int yTile = (int) (-yPix / tileSize) + 1;
+				
+				// Make sure the tile being drawn is within the level
+				if((xTile >= 0) && (xTile < level.tileMap.width) && (yTile >= 0) && (yTile < level.tileMap.height)) {					
+					final Tile currentTile = Tile.getTile(level.tileMap.pixels[xTile + yTile * level.tileMap.width]);
+					if(currentTile != null) {
+						int xTilePix = (int) ((Math.abs(xPix * 1.0f) % tileSize) / tileSize * currentTile.sprite.width);
+						int yTilePix = (int) ((Math.abs(yPix * 1.0f) % tileSize) / tileSize * currentTile.sprite.height);
+						int colour = currentTile.sprite.pixels[xTilePix + (currentTile.sprite.height - yTilePix - 1) * currentTile.sprite.width];
+						
+						setPixel(x, y, (float) zd * 4, colour);
+					}
+				}
 			}
 		}
 

@@ -1,18 +1,20 @@
 package utils;
 
+import graphics.Sprite;
+
 public class Tile {
 	
-	public static final Tile TILE_WOOD = new Tile(0xff7f7f7f);
+	public static final Tile TILE_WOOD = new Tile(new Sprite("assets/art/floor.png"));
 	
 	public static Tile getTile(int colour) {
 		if(colour == 0xff9E631A) return TILE_WOOD;
 		return null;
 	}
 	
-	public final int colour;
+	public final Sprite sprite;
 
-	public Tile(int colour) {
-		this.colour = colour;
+	public Tile(Sprite sprite) {
+		this.sprite = sprite;
 	}
 	
 }

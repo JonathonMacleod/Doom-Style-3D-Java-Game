@@ -11,6 +11,7 @@ import graphics.RenderPane3D;
 import graphics.Sprite;
 import ui.Window;
 import utils.Level;
+import utils.Tile;
 
 public class Application {
 
@@ -178,12 +179,13 @@ public class Application {
 		
 		// Clear, draw to, and display the render pane on the canvas draw graphics
 		renderPane.clear();
-		renderPane.drawFloorAndCeiling(2, 2, 32);
+//		renderPane.drawFloorAndCeiling(2, 2, 32);
 		for(int i = 0; i < maxEntities; i++) {
 			renderPane.drawEntity(entities[i]);
 		}
 		renderPane.drawLevel(level);
 		renderPane.applyFog(0xff010401, 1f);
+				
 		graphics.drawImage(renderPane.getBufferedImage(), 0, 0, window.getWidth(), window.getHeight(), null);
 		
 		graphics.dispose();
