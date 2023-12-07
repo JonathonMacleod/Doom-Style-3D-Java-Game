@@ -190,7 +190,7 @@ public class RenderPane3D extends RenderPane {
 			double yPixel0 = yPixel00 + (yPixel10 - yPixel00) * pr;
 			double yPixel1 = yPixel01 + (yPixel11 - yPixel01) * pr;
 
-			int yp0 = (int) Math.ceil(yPixel0);
+			int yp0 = (int) Math.floor(yPixel0);
 			int yp1 = (int) Math.ceil(yPixel1);
 			int wallHeight = Math.abs(yp1 - yp0); 
 			int wallTop = yp0;
