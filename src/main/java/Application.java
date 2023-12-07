@@ -79,14 +79,14 @@ public class Application {
 			// Update the game logic
 			if(nanosecondsSinceLastUpdate >= maxNanosecondsBetweenUpdates) {
 				double delta = (nanosecondsSinceLastUpdate / 1000000000.0);
-				nanosecondsSinceLastUpdate -= maxNanosecondsBetweenUpdates;
+				nanosecondsSinceLastUpdate = 0;
 				updateGame(delta);
 				currentUps++;
 			}
 			
 			// Render the latest frame
 			if(allowUnlimitedFPS || (nanosecondsSinceLastRender >= maxNanosecondsBetweenRenders)) {
-				nanosecondsSinceLastRender -= maxNanosecondsBetweenRenders;
+				nanosecondsSinceLastRender = 0;
 				renderGame();
 				currentFps++;
 			}
@@ -142,7 +142,7 @@ public class Application {
 		
 	}
 	
-	private void updateGame(double delta) {
+	private void updateGame(double delta) {		
 		// Apply rotation if the LEFT or RIGHT arrow keys are pressed
 		final float rotationSpeed = (float) ((2 * Math.PI) * 0.65f * delta);
 		if(window.inputHandler.keyStates[KeyEvent.VK_LEFT]) renderPane.camera.angle -= rotationSpeed;
@@ -155,7 +155,7 @@ public class Application {
 		// Apply movement if the WASD keys are pressed
 		int xMovement = 0, zMovement = 0;
 		if(window.inputHandler.keyStates[KeyEvent.VK_W]) zMovement -= 1;
-		if(window.inputHandler.keyStates[KeyEvent.VK_S]) zMovement	 += 1;
+		if(window.inputHandler.keyStates[KeyEvent.VK_S]) zMovement += 1;
 		if(window.inputHandler.keyStates[KeyEvent.VK_A]) xMovement += 1;
 		if(window.inputHandler.keyStates[KeyEvent.VK_D]) xMovement -= 1;
 		final float speed = (float) (movementSpeed * delta);
