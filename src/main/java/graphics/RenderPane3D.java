@@ -53,7 +53,7 @@ public class RenderPane3D extends RenderPane {
 		// Render fog
 		if(level.player == null) return;
 		final Camera camera = level.player.camera;
-		applyFog(camera.maxRenderDistance, 0xff010401, 0.5f);
+		applyFog(camera.maxRenderDistance, 0xff010401, 0.4f);
 	}
 	
 	public void drawFloorAndCeiling(Level level, float floorDepth, float ceilingHeight, int tileSize) {
@@ -150,7 +150,7 @@ public class RenderPane3D extends RenderPane {
 		double l1 = (0.5 - zCam) * 2;
 		double zz1 = yc1 * rCos + xc1 * rSin;
 
-		double zClip = 0.2;
+		double zClip = camera.minRenderDistance;
 
 		if (zz0 < zClip && zz1 < zClip) return;
 
