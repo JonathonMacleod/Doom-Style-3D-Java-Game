@@ -18,11 +18,6 @@ public class RenderPane3D extends RenderPane {
 			pixels[i] = 0xff000000;
 			zBuffer[i] = maxDistance;
 		}
-		for(int y = 0; y < height; y++) {
-			for(int x = 0; x < width; x++) {
-				setPixel(x, y, maxDistance, 0xff);
-			}
-		}
 	}
 	
 	public void setPixel(int x, int y, int colour) { setPixel(x, y, 0, colour); }
@@ -41,19 +36,26 @@ public class RenderPane3D extends RenderPane {
 		// Render the floor and ceiling
 		drawFloorAndCeiling(level, 2, 2, 16);
 		
+		// Render fog
+		if(level.player == null) return;
+		final Camera camera = level.player.camera;
+
 		// Draw the walls from the level tile map
-		//TODO: Only draw within visible range of the player's position
-		for(int x = 0; x < level.tileMap.width; x++) {
-			for(int y = 0; y < level.tileMap.height; y++) {
+		final int playerTileX = (int) camera.x / 32;
+		final int playerTileZ = (int) camera.z / 32;
+		final int tileDrawRadius = 10;
+		final int drawTileXStart = Math.max(playerTileX - tileDrawRadius, 0);
+		final int drawTileXEnd = Math.min(playerTileX + tileDrawRadius, level.tileMap.width);
+		final int drawTileZStart = Math.max(playerTileZ - tileDrawRadius, 0);
+		final int drawTileZEnd = Math.min(playerTileZ + tileDrawRadius, level.tileMap.height);
+		for(int x = drawTileXStart; x < drawTileXEnd; x++) {
+			for(int y = drawTileZStart; y < drawTileZEnd; y++) {
 				final Wall levelWall = level.getLevelWall(x, y);
 				if(levelWall != null) drawWall(level, levelWall, x, y);
 			}
 		}
 
-		// Render fog
-		if(level.player == null) return;
-		final Camera camera = level.player.camera;
-		applyFog(camera.maxRenderDistance, 0xff010401, 0.4f);
+		applyFog(camera.maxRenderDistance, 0xff010401, 0.3f);
 	}
 	
 	public void drawFloorAndCeiling(Level level, float floorDepth, float ceilingHeight, int tileSize) {
@@ -70,7 +72,7 @@ public class RenderPane3D extends RenderPane {
 		final float fov = height;
 		final float xCenter = (width / 2.0f);
 		final float yCenter = (height / 2.0f);
-		
+
 		for (int y = 0; y < height; y++) {
 			double yd = ((y + 0.5) - yCenter) / fov;
 
@@ -103,12 +105,12 @@ public class RenderPane3D extends RenderPane {
 						int yTilePix = (int) ((Math.abs(yPix * 1.0f) % tileSize) / tileSize * currentTile.sprite.height);
 						int colour = currentTile.sprite.pixels[xTilePix + (currentTile.sprite.height - yTilePix - 1) * currentTile.sprite.width];
 						
-						setPixel(x, y, (float) zd * 4, colour);
+						pixels[x + y * width] = colour;
+						zBuffer[x + y * width] = (float) zd * 4;
 					}
 				}
 			}
 		}
-
 	}
 	
 	public void drawWall(Level level, Wall wall, double x, double z) {
@@ -275,7 +277,7 @@ public class RenderPane3D extends RenderPane {
 		
 		for(int i = 0; i < pixels.length; i++) {
 			final float z = zBuffer[i];
-						
+
 			if(z >= maxDistance) {
 				pixels[i] = fogColour;
 			} else {
@@ -285,7 +287,6 @@ public class RenderPane3D extends RenderPane {
 				final int sourceGreen = (sourceColour & 0x0000ff00) >> 8;
 				final int sourceBlue = (sourceColour & 0x000000ff);
 
-//				int colour = 0xff000000 | (int) (255 * ((maxRenderDistance + relativeScreenZ) / maxRenderDistance));
 				final float fogAlpha = ((maxDistance - z) / maxDistance) * fogStrength;
 				
 				final int resultRed = (int) ((sourceRed * fogAlpha) + (fogRed * (1.0f - fogAlpha)));

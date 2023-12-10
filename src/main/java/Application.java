@@ -66,8 +66,8 @@ public class Application {
 			long timeSinceLastLoop = (currentNanoTime - lastLoopTime);
 			lastLoopTime = currentNanoTime;
 
-			nanosecondsSinceLastRender += timeSinceLastLoop;
 			nanosecondsSinceLastUpdate += timeSinceLastLoop;
+			nanosecondsSinceLastRender += timeSinceLastLoop;
 			
 			// Update the game logic
 			if(nanosecondsSinceLastUpdate >= maxNanosecondsBetweenUpdates) {
