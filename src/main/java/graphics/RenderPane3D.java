@@ -73,10 +73,10 @@ public class RenderPane3D extends RenderPane {
 		for (int y = 0; y < height; y++) {
 			double yd = ((y + 0.5) - yCenter) / fov;
 
-//			boolean floor = true;
+			boolean floor = true;
 			double zd = (4 - zCam * 8) / yd;
 			if (yd < 0) {
-//				floor = false;
+				floor = false;
 				zd = (4 + zCam * 8) / -yd;
 			}
 
@@ -94,7 +94,9 @@ public class RenderPane3D extends RenderPane {
 				
 				// Make sure the tile being drawn is within the level
 				if((xTile >= 0) && (xTile < level.tileMap.width) && (yTile >= 0) && (yTile < level.tileMap.height)) {					
-					final Tile currentTile = Tile.getTile(level.tileMap.pixels[xTile + yTile * level.tileMap.width]);
+					final int tileMapIndex = xTile + yTile * level.tileMap.width;
+					final Tile currentTile = floor ? Tile.getFloorTile(level.tileMap.pixels[tileMapIndex]) : Tile.getCeilingTile(level.tileMap.pixels[tileMapIndex]);
+
 					if(currentTile != null) {
 						int xTilePix = (int) ((Math.abs(xPix * 1.0f) % tileSize) / tileSize * currentTile.sprite.width);
 						int yTilePix = (int) ((Math.abs(yPix * 1.0f) % tileSize) / tileSize * currentTile.sprite.height);

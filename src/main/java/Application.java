@@ -160,7 +160,7 @@ public class Application {
 		if(window.inputHandler.keyStates[KeyEvent.VK_A]) xMovement += 1;
 		if(window.inputHandler.keyStates[KeyEvent.VK_D]) xMovement -= 1;
 		final float speed = (float) (movementSpeed * delta);
-		renderPane.camera.applyAxisMovements(xMovement * speed, 0, zMovement * speed);
+		renderPane.camera.applyAxisMovements(level, xMovement * speed, 0, zMovement * speed);
 		
 		// Teleport the player to the center of the level if the player presses the X key
 		if(window.inputHandler.keyStates[KeyEvent.VK_X]) {
@@ -180,10 +180,10 @@ public class Application {
 		// Clear, draw to, and display the render pane on the canvas draw graphics
 		renderPane.clear();
 //		renderPane.drawFloorAndCeiling(2, 2, 32);
+		renderPane.drawLevel(level);
 		for(int i = 0; i < maxEntities; i++) {
 			renderPane.drawEntity(entities[i]);
 		}
-		renderPane.drawLevel(level);
 		renderPane.applyFog(0xff010401, 1f);
 				
 		graphics.drawImage(renderPane.getBufferedImage(), 0, 0, window.getWidth(), window.getHeight(), null);
