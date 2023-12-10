@@ -1,27 +1,19 @@
-
-
 import java.awt.Graphics;
-import java.awt.event.KeyEvent;
 import java.awt.image.BufferStrategy;
-import java.util.Random;
 
 import graphics.Camera;
-import graphics.Entity;
 import graphics.RenderPane3D;
-import graphics.Sprite;
 import ui.Window;
 import utils.Level;
-import utils.Tile;
 
 public class Application {
 
-	private final int maxEntities = 256;
-	private final Entity[] entities = new Entity[maxEntities];
-	private final RenderPane3D renderPane = new RenderPane3D(400, 240, new Camera(60.0f), 0.1f, 250.0f);
-	
 	private final Window window;
 	private final Thread mainGameThread;
 	private volatile boolean isGameRunning = false;
+
+	private Level currentLevel;
+	private final RenderPane3D renderPane = new RenderPane3D(400, 240);
 	
 	public Application(String title, int width, int height) {
 		window = new Window(title, width, height);
@@ -106,86 +98,25 @@ public class Application {
 	}
 	
 	private void onStartup() {
-		final int RED = 0xffff0000;
-		final int GRE = 0xff00ff00;
-		final int BLU = 0xff0000ff;
-		
-		// Create a random sample of sprites for testing
-		final Random random = new Random();
-		final Sprite sprite = new Sprite(16, 16, new int[] {
-			RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
-			RED, GRE, GRE, GRE, RED, RED, RED, RED, RED, RED, RED, RED, GRE, GRE, GRE, RED,
-			RED, GRE, RED, GRE, RED, RED, RED, RED, RED, RED, RED, RED, GRE, RED, GRE, RED,
-			RED, GRE, GRE, GRE, RED, RED, RED, RED, RED, RED, RED, RED, GRE, GRE, GRE, RED,
-			RED, GRE, GRE, GRE, RED, RED, RED, RED, RED, RED, RED, RED, GRE, GRE, GRE, RED,
-			RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
-			RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
-			RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
-			RED, RED, RED, RED, RED, RED, RED, BLU, BLU, RED, RED, RED, RED, RED, RED, RED,
-			RED, RED, RED, RED, RED, RED, BLU, BLU, BLU, BLU, RED, RED, RED, RED, RED, RED,
-			RED, RED, RED, RED, RED, RED, RED, BLU, BLU, RED, RED, RED, RED, RED, RED, RED,
-			RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
-			RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
-			RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
-			RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
-			RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED, RED,
-		});
-		for(int i = 0; i < maxEntities; i++) {
-			final float x = random.nextFloat(-300, 300);
-			final float y = random.nextFloat(0, 100);
-			final float z = random.nextFloat(0, 200);
-			final Entity entity = new Entity(x, y, z, sprite);
-			entities[i] = entity;
-		}
+		currentLevel = new Level("level");
 	}
 	
 	private void onShutdown() {
 		
 	}
 	
-	private void updateGame(double delta) {		
-		// Apply rotation if the LEFT or RIGHT arrow keys are pressed
-		final float rotationSpeed = (float) ((2 * Math.PI) * 0.65f * delta);
-		if(window.inputHandler.keyStates[KeyEvent.VK_LEFT]) renderPane.camera.angle -= rotationSpeed;
-		if(window.inputHandler.keyStates[KeyEvent.VK_RIGHT]) renderPane.camera.angle += rotationSpeed;
-
-		// Work out the movement speed of the player (e.g. are they sprinting via the SHIFT key)
-		float movementSpeed = 36f;
-		if(window.inputHandler.keyStates[KeyEvent.VK_SHIFT]) movementSpeed = 64f;
-		
-		// Apply movement if the WASD keys are pressed
-		int xMovement = 0, zMovement = 0;
-		if(window.inputHandler.keyStates[KeyEvent.VK_W]) zMovement -= 1;
-		if(window.inputHandler.keyStates[KeyEvent.VK_S]) zMovement += 1;
-		if(window.inputHandler.keyStates[KeyEvent.VK_A]) xMovement += 1;
-		if(window.inputHandler.keyStates[KeyEvent.VK_D]) xMovement -= 1;
-		final float speed = (float) (movementSpeed * delta);
-		renderPane.camera.applyAxisMovements(level, xMovement * speed, 0, zMovement * speed);
-		
-		// Teleport the player to the center of the level if the player presses the X key
-		if(window.inputHandler.keyStates[KeyEvent.VK_X]) {
-			renderPane.camera.x = 41 * 32 + 16;
-			renderPane.camera.y = 0;
-			renderPane.camera.z = 39 * 32 - 16;
-			renderPane.camera.angle = (float) Math.PI;
-		}
+	private void updateGame(double delta) {
+		currentLevel.player.update(window.inputHandler, (float) delta);
 	}
-	
-	Level level = new Level("level");
 	
 	private void renderGame() {
 		final BufferStrategy bufferStrategy = window.getBufferStrategy();
 		final Graphics graphics = window.getDrawGraphics();
 		
 		// Clear, draw to, and display the render pane on the canvas draw graphics
-		renderPane.clear();
-//		renderPane.drawFloorAndCeiling(2, 2, 32);
-		renderPane.drawLevel(level);
-		for(int i = 0; i < maxEntities; i++) {
-			renderPane.drawEntity(entities[i]);
-		}
-		renderPane.applyFog(0xff010401, 1f);
-				
+		final Camera camera = currentLevel.player.camera;
+		if(camera != null) renderPane.clear(camera.maxRenderDistance);
+		renderPane.drawLevel(currentLevel);
 		graphics.drawImage(renderPane.getBufferedImage(), 0, 0, window.getWidth(), window.getHeight(), null);
 		
 		graphics.dispose();

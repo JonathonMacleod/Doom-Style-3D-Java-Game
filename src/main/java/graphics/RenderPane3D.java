@@ -7,27 +7,20 @@ import utils.Wall;
 public class RenderPane3D extends RenderPane {
 
 	private final float[] zBuffer;
-	
-	public final Camera camera;
-	public final float minRenderDistance, maxRenderDistance;
-	
-	public RenderPane3D(int width, int height, Camera camera, float minRenderDistance, float maxRenderDistance) {
-		super(width, height);
-		this.camera = camera;
-		this.minRenderDistance = minRenderDistance;
-		this.maxRenderDistance = maxRenderDistance;
 		
+	public RenderPane3D(int width, int height) {
+		super(width, height);		
 		zBuffer = new float[width * height];
 	}
 	
-	public void clear() {
+	public void clear(float maxDistance) {
 		for(int i = 0; i < pixels.length; i++) {
 			pixels[i] = 0xff000000;
-			zBuffer[i] = maxRenderDistance;
+			zBuffer[i] = maxDistance;
 		}
-		for(int x = 0; x < width; x++) {
-			for(int y = 0; y < height; y++) {
-				setPixel(x, y, maxRenderDistance, 0xff);
+		for(int y = 0; y < height; y++) {
+			for(int x = 0; x < width; x++) {
+				setPixel(x, y, maxDistance, 0xff);
 			}
 		}
 	}
@@ -53,12 +46,20 @@ public class RenderPane3D extends RenderPane {
 		for(int x = 0; x < level.tileMap.width; x++) {
 			for(int y = 0; y < level.tileMap.height; y++) {
 				final Wall levelWall = level.getLevelWall(x, y);
-				if(levelWall != null) drawBlock(levelWall, x, y);
+				if(levelWall != null) drawWall(level, levelWall, x, y);
 			}
 		}
+
+		// Render fog
+		if(level.player == null) return;
+		final Camera camera = level.player.camera;
+		applyFog(camera.maxRenderDistance, 0xff010401, 0.5f);
 	}
 	
 	public void drawFloorAndCeiling(Level level, float floorDepth, float ceilingHeight, int tileSize) {
+		if(level.player == null) return;
+		final Camera camera = level.player.camera;
+		
 		final float xCam = (float) ((camera.x / 32.0f) - Math.sin(-camera.angle) * 0.3f);
 		final float yCam = (float) ((-camera.z / 32.0f) - Math.cos(-camera.angle) * 0.3f);
 		final float zCam = (float) (-0.2f - (camera.y / 32.0f));
@@ -110,15 +111,18 @@ public class RenderPane3D extends RenderPane {
 
 	}
 	
-	public void drawBlock(Wall wall, double x, double z) {
+	public void drawWall(Level level, Wall wall, double x, double z) {
 		final float tileSize = 1;
-		drawWall(x + tileSize, -z, x, -z, wall.sprite);
-		drawWall(x, -z + tileSize, x + tileSize, -z + tileSize, wall.sprite);
-		drawWall(x, -z, x, -z + tileSize, wall.sprite);
-		drawWall(x + tileSize, -z + tileSize, x + tileSize, -z, wall.sprite);
+		drawWallSurface(level, x + tileSize, -z, x, -z, wall.sprite);
+		drawWallSurface(level, x, -z + tileSize, x + tileSize, -z + tileSize, wall.sprite);
+		drawWallSurface(level, x, -z, x, -z + tileSize, wall.sprite);
+		drawWallSurface(level, x + tileSize, -z + tileSize, x + tileSize, -z, wall.sprite);
 	}
 	
-	public void drawWall(double x0, double y0, double x1, double y1, Sprite sprite) {
+	private void drawWallSurface(Level level, double x0, double y0, double x1, double y1, Sprite sprite) {
+		if(level.player == null) return;
+		final Camera camera = level.player.camera;
+		
 		final float xCam = (float) ((camera.x / 32.0f) - Math.sin(-camera.angle) * 0.3f);
 		final float yCam = (float) ((-camera.z / 32.0f) - Math.cos(-camera.angle) * 0.3f);
 		final float zCam = (float) (-0.2f - (camera.y / 32.0f));
@@ -210,7 +214,10 @@ public class RenderPane3D extends RenderPane {
 		}
 	}
 	
-	public void drawEntity(Entity entity) {
+	public void drawEntity(Level level, Entity entity) {
+		if(level.player == null) return;
+		final Camera camera = level.player.camera;
+		
 		// Get the entity position relative to the camera
 		final float entityRelativeX = (float) (entity.x - camera.x);
 		final float entityRelativeY = (float) (entity.y - camera.y);
@@ -222,7 +229,7 @@ public class RenderPane3D extends RenderPane {
 		final float relativeEntityZ = (float) -((entityRelativeZ * Math.cos(-camera.angle)) - (entityRelativeX * Math.sin(-camera.angle)));
 		
 		// Check that the entity is in-front of the camera
-		if(relativeEntityZ < minRenderDistance) 
+		if(relativeEntityZ < camera.minRenderDistance) 
 			return;
 		
 		// Calculate the position of the entity on the screen
@@ -261,7 +268,7 @@ public class RenderPane3D extends RenderPane {
 		}
 	}
 	
-	public void applyFog(int fogColour, float fogStrength) {
+	public void applyFog(float maxDistance, int fogColour, float fogStrength) {
 		final int fogRed = (fogColour & 0x00ff0000) >> 16;
 		final int fogGreen = (fogColour & 0x0000ff00) >> 8;
 		final int fogBlue = (fogColour & 0x000000ff);
@@ -269,7 +276,7 @@ public class RenderPane3D extends RenderPane {
 		for(int i = 0; i < pixels.length; i++) {
 			final float z = zBuffer[i];
 						
-			if(z >= maxRenderDistance) {
+			if(z >= maxDistance) {
 				pixels[i] = fogColour;
 			} else {
 				final int sourceColour = pixels[i];
@@ -279,7 +286,7 @@ public class RenderPane3D extends RenderPane {
 				final int sourceBlue = (sourceColour & 0x000000ff);
 
 //				int colour = 0xff000000 | (int) (255 * ((maxRenderDistance + relativeScreenZ) / maxRenderDistance));
-				final float fogAlpha = ((maxRenderDistance - z) / maxRenderDistance) * fogStrength;
+				final float fogAlpha = ((maxDistance - z) / maxDistance) * fogStrength;
 				
 				final int resultRed = (int) ((sourceRed * fogAlpha) + (fogRed * (1.0f - fogAlpha)));
 				final int resultGreen = (int) ((sourceGreen * fogAlpha) + (fogGreen * (1.0f - fogAlpha)));

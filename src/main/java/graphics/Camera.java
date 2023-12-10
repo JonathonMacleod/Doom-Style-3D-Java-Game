@@ -7,14 +7,18 @@ public class Camera {
 
 	public final float fovRadians;
 	public float x, y, z, angle;
+	public final float minRenderDistance, maxRenderDistance;
 	
-	public Camera(float fovDegrees) {
+	public Camera(float fovDegrees, float nearPlane, float farPlane) {
 		fovRadians = (float) Math.toRadians(fovDegrees);
 		
-		x = 41 * 32 + 16;
+		x = 0;
 		y = 0;
-		z = 39 * 32 - 16;
+		z = 0;
 		angle = (float) Math.PI;
+		
+		minRenderDistance = nearPlane;
+		maxRenderDistance = farPlane;
 	}
 	
 	public void applyAxisMovements(Level level, float xDelta, float yDelta, float zDelta) {
@@ -71,7 +75,6 @@ public class Camera {
 			if(xSpaceRemaining < collisionBuffer) bufferTileX = newTileX + 1;
 		} else {
 			final float xSpaceRemaining = (newTileXPos % 1);
-			System.out.println(xSpaceRemaining);
 			if(xSpaceRemaining < collisionBuffer) bufferTileX = newTileX - 1;
 		}
 		
