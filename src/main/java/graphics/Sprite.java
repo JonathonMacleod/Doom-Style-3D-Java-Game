@@ -54,4 +54,27 @@ public class Sprite {
 		}
 	}
 	
+	public Sprite getSubsection(int subsectionX, int subsectionY, int subsectionWidth, int subsectionHeight) {
+		if((subsectionX < 0) || (subsectionY < 0) || (subsectionWidth < 0) || (subsectionHeight < 0)) return null;
+		
+		int left = Math.max(subsectionX, 0);
+		int top = Math.max(subsectionY, 0);
+		int right = Math.min(subsectionX + subsectionWidth, width);
+		int bottom = Math.min(subsectionY + subsectionHeight, height);
+		
+		int resultWidth = right - left;
+		int resultHeight = bottom - top;
+		int[] resultPixels = new int[resultWidth * resultHeight];
+		
+		for(int yPixel = 0; yPixel < resultHeight; yPixel++) {
+			int ySource = yPixel + top;
+			for(int xPixel = 0; xPixel < resultWidth; xPixel++) {
+				int xSource = xPixel + left;
+				resultPixels[xPixel + yPixel * resultWidth] = pixels[xSource + ySource * width];
+			}
+		}
+		
+		return new Sprite(resultWidth, resultHeight, resultPixels);
+	}
+	
 }

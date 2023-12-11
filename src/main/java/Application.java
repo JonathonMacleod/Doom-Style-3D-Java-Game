@@ -98,7 +98,7 @@ public class Application {
 	}
 	
 	private void onStartup() {
-		currentLevel = new Level("level");
+		currentLevel = new Level("test");
 	}
 	
 	private void onShutdown() {

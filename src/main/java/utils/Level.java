@@ -16,8 +16,8 @@ public class Level {
 	public final ArrayList<Entity> entities = new ArrayList<Entity>();
 	
 	public Level(String levelName) {
-		tileMap = new Sprite("assets/" + levelName + "/tile_map.png");
-		entityMap = new Sprite("assets/" + levelName + "/entity_map.png");
+		tileMap = new Sprite("assets/levels/" + levelName + "/tile_map.png");
+		entityMap = new Sprite("assets/levels/" + levelName + "/entity_map.png");
 
 		addEntities();
 		player = new Player(this, null, 0, 0, 0);
