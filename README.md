@@ -6,4 +6,5 @@ This project contains the source code for a 3D game, which uses software renderi
 
 The game is written using Java, and constructed as a Maven project.
 
-![Image of Development Progress](./assets/branding/Development_Progress_1.jpg)
+![Image of Latest Development Progress](./assets/branding/progress/dev_v0_1/Development_Progress_5.jpg)
+

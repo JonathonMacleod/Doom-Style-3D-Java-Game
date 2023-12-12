@@ -6,6 +6,8 @@ import utils.Level;
 
 public class Ghost extends Mob {
 
+	int rand = (int) Math.random() * 1000;
+	
 	public Ghost(Level level, float x, float y, float z) {
 		super(level, Art.MOB_GHOST, x, y, z, 2.0f);
 	}
@@ -13,7 +15,7 @@ public class Ghost extends Mob {
 	@Override
 	public void update(InputHandler inputHandler, float delta) {
 		// Add ghost bobbing up and down
-		y = (float) Math.sin(Math.toRadians(System.currentTimeMillis() / 4)) * 2;
+		y = (float) Math.sin(Math.toRadians(System.currentTimeMillis() / 4 + rand)) * 2;
 		
 		float xDiff = level.player.camera.x - x;
 		float zDiff = level.player.camera.z - z;
