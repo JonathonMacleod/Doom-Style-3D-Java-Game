@@ -7,7 +7,7 @@ import utils.Level;
 public class Wolf extends Mob {
 
 	public Wolf(Level level, float x, float y, float z) {
-		super(level, Art.MOB_WOLF, x, y, z);
+		super(level, Art.MOB_WOLF_1, x, y, z);
 	}
 	
 	@Override

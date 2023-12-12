@@ -59,6 +59,30 @@ public class RenderPane3D extends RenderPane {
 		//TODO: Cull entities based on their position
 		for(Entity currentEntity : level.entities) {
 			currentEntity.y = 16;
+			
+			currentEntity.sprite = System.currentTimeMillis() % 2000 > 1000 ? Art.MOB_WOLF_1 : Art.MOB_WOLF_2;
+			
+			float xDiff = level.player.camera.x - currentEntity.x;
+			float zDiff = level.player.camera.z - currentEntity.z;
+
+			final float maxSpeed = 0.3f;
+			final float minSpeed = -0.3f;
+			if(xDiff > 0) {
+				if(xDiff > maxSpeed) xDiff = maxSpeed;
+			} else {
+				if(xDiff < minSpeed) xDiff = minSpeed;
+			}
+			if(zDiff > 0) {
+				if(zDiff > maxSpeed) zDiff = maxSpeed;
+			} else {
+				if(zDiff < minSpeed) zDiff = minSpeed;
+			}
+			
+			currentEntity.x += xDiff;
+			currentEntity.z += zDiff;
+			
+			System.out.println("Mob X: " + currentEntity.x + ", Mob Z: " + currentEntity.z + ", Player X: " + level.player.camera.x + ", Player Z: " + level.player.camera.z);
+			
 			drawEntity(level, currentEntity);
 		}
 		
@@ -247,7 +271,7 @@ public class RenderPane3D extends RenderPane {
 		final float screenEntityY = (height / 2.0f) + (relativeEntityY / relativeEntityZ) * (height / 2.0f);
 		
 		// Calculate the boundaries of the entity drawn on the screen
-		final int pushBackZ = (int) (height / relativeEntityZ) * 16;
+		final int pushBackZ = (int) (height / relativeEntityZ * 16);
 		final int screenEntityLeft = (int) (screenEntityX - pushBackZ);
 		final int screenEntityRight = (int) (screenEntityX + pushBackZ);
 		final int screenEntityTop = (int) (screenEntityY - pushBackZ);
