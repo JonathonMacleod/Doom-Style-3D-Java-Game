@@ -2,7 +2,9 @@ import java.awt.Graphics;
 import java.awt.image.BufferStrategy;
 
 import graphics.Camera;
+import graphics.Entity;
 import graphics.RenderPane3D;
+import mobs.Mob;
 import ui.Window;
 import utils.Level;
 
@@ -107,6 +109,9 @@ public class Application {
 	
 	private void updateGame(double delta) {
 		currentLevel.player.update(window.inputHandler, (float) delta);
+		for(Entity currentEntity : currentLevel.entities) {
+			if(currentEntity instanceof Mob) ((Mob) currentEntity).update(window.inputHandler, (float) delta);
+		}
 	}
 	
 	private void renderGame() {

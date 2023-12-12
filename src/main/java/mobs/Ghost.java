@@ -4,22 +4,22 @@ import graphics.Art;
 import ui.InputHandler;
 import utils.Level;
 
-public class Wolf extends Mob {
+public class Ghost extends Mob {
 
-	public Wolf(Level level, float x, float y, float z) {
-		super(level, Art.MOB_WOLF_1, x, y, z);
+	public Ghost(Level level, float x, float y, float z) {
+		super(level, Art.MOB_GHOST, x, y, z, 2.0f);
 	}
 	
 	@Override
 	public void update(InputHandler inputHandler, float delta) {
-		// Switch between the two sprite options every second
-		sprite = System.currentTimeMillis() % 2000 > 1000 ? Art.MOB_WOLF_1 : Art.MOB_WOLF_2;
+		// Add ghost bobbing up and down
+		y = (float) Math.sin(Math.toRadians(System.currentTimeMillis() / 4)) * 2;
 		
 		float xDiff = level.player.camera.x - x;
 		float zDiff = level.player.camera.z - z;
 
-		final float maxSpeed = 0.3f;
-		final float minSpeed = -0.3f;
+		final float maxSpeed = 0.1f;
+		final float minSpeed = -0.1f;
 		if(xDiff > 0) {
 			if(xDiff > maxSpeed) xDiff = maxSpeed;
 		} else {

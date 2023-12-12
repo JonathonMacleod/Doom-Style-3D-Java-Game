@@ -14,6 +14,11 @@ public abstract class Mob extends Entity {
 		this.level = level;
 	}
 
+	public Mob(Level level, Sprite sprite, float x, float y, float z, float scale) {
+		super(x, y, z, sprite, scale);
+		this.level = level;
+	}
+
 	public abstract void update(InputHandler inputHandler, float delta);
 	
 }

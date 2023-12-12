@@ -12,6 +12,8 @@ public class Art {
 	public static final Sprite MOB_WOLF_1;
 	public static final Sprite MOB_WOLF_2;
 	
+	public static final Sprite MOB_GHOST;
+	
 	static {
 		final Sprite spritesheet = new Sprite("assets/art/spritesheet.png");
 		
@@ -19,6 +21,7 @@ public class Art {
 		WALL_BRICK = spritesheet.getSubsection(16, 0, 16, 16);
 		MOB_WOLF_1 = spritesheet.getSubsection(0, 16, 32, 64);
 		MOB_WOLF_2 = spritesheet.getSubsection(32, 16, 32, 64);
+		MOB_GHOST = spritesheet.getSubsection(0, 80, 16, 16);
 	}
 	
 }
