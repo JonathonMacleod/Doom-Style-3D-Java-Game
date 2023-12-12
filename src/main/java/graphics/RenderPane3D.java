@@ -55,6 +55,14 @@ public class RenderPane3D extends RenderPane {
 			}
 		}
 
+		// Draw all entities in the level
+		//TODO: Cull entities based on their position
+		for(Entity currentEntity : level.entities) {
+			currentEntity.y = 16;
+			drawEntity(level, currentEntity);
+		}
+		
+		// Render fog ontop of everything previously drawn
 		applyFog(camera.maxRenderDistance, 0xff010401, 0.3f);
 	}
 	
@@ -239,11 +247,11 @@ public class RenderPane3D extends RenderPane {
 		final float screenEntityY = (height / 2.0f) + (relativeEntityY / relativeEntityZ) * (height / 2.0f);
 		
 		// Calculate the boundaries of the entity drawn on the screen
-		final int pushBackZ = (int) (height / relativeEntityZ);
+		final int pushBackZ = (int) (height / relativeEntityZ) * 16;
 		final int screenEntityLeft = (int) (screenEntityX - pushBackZ);
 		final int screenEntityRight = (int) (screenEntityX + pushBackZ);
 		final int screenEntityTop = (int) (screenEntityY - pushBackZ);
-		final int screenEntityBottom = (int) (screenEntityY + pushBackZ);
+		final int screenEntityBottom = (int) ((screenEntityY + pushBackZ));
 		
 		for(int screenY = screenEntityTop; screenY < screenEntityBottom; screenY++) {
 			if(screenY < 0)
@@ -265,7 +273,8 @@ public class RenderPane3D extends RenderPane {
 				
 				final int textureIndex = (textureColumn + textureRow * entity.sprite.width);
 				final int colour = entity.sprite.pixels[textureIndex];
-				setPixel(screenX, screenY, relativeEntityZ, colour);
+				
+				if((colour != 0xff7f007f) && (colour != 0xffff00ff)) setPixel(screenX, screenY, relativeEntityZ, colour);
 			}
 		}
 	}

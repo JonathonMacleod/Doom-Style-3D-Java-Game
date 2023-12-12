@@ -1,12 +1,13 @@
 package mobs;
 
+import graphics.Art;
 import ui.InputHandler;
 import utils.Level;
 
-public class Villain extends Mob {
+public class Wolf extends Mob {
 
-	public Villain(Level level, float x, float y, float z) {
-		super(level, null, x, y, z);
+	public Wolf(Level level, float x, float y, float z) {
+		super(level, Art.MOB_WOLF, x, y, z);
 	}
 	
 	@Override

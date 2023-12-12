@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import graphics.Entity;
 import graphics.Sprite;
 import mobs.Player;
+import mobs.Wolf;
 
 public class Level {
 
@@ -56,6 +57,14 @@ public class Level {
 	}
 	
 	private void addEntities() {
-		
+		for(int y = 0; y < entityMap.height; y++) {
+			for(int x = 0; x < entityMap.width; x++) {
+				int colour = entityMap.pixels[x + y * entityMap.width];
+				int tileX = x * 32 + 16;
+				int tileZ = y * 32 - 16;
+				
+				if(colour == 0xffff0000) entities.add(new Wolf(this, tileX, 0, tileZ));
+			}
+		}
 	}
 }
