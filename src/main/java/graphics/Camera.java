@@ -22,6 +22,7 @@ public class Camera {
 	}
 	
 	public void applyAxisMovements(Level level, float xDelta, float yDelta, float zDelta) {
+		// Rotate the provided X and Z translations by the angle using a unit circle
 		final float rotatedXDelta = (float) (xDelta * Math.cos(angle) + zDelta * Math.sin(angle));
 		final float rotatedZDelta = (float) (zDelta * Math.cos(angle) - xDelta * Math.sin(angle));		
 
@@ -29,6 +30,7 @@ public class Camera {
 		applyXMovement(level, rotatedXDelta);
 		applyZMovement(level, rotatedZDelta);
 
+		// Since there is no collision detection on the Y axis just accept any Y translations
 		y += yDelta;
 	}
 	
@@ -37,10 +39,12 @@ public class Camera {
 		// This prevents the near clipping plane from touching a wall at small angles
 		final float collisionBuffer = 8.0f / 32.0f;
 		
+		// Calculate where the player is currently standing within the level (to the tile) before moving
 		final float prevTileXPos = (x / 32.0f);
 		final int prevTileX = (int) prevTileXPos;
 		final int prevTileZ = ((int) z / 32) + 1;
-		
+
+		// Check whether the player is colliding with any walls before moving
 		if((prevTileX >= 0) && (prevTileZ >= 0) && (prevTileX < level.tileMap.width) && (prevTileZ < level.tileMap.height)) {
 			final int prevWallColour = level.tileMap.pixels[prevTileX + prevTileZ * level.tileMap.width];
 			final Wall prevWall = Wall.getWall(prevWallColour);
@@ -52,11 +56,13 @@ public class Camera {
 				return;
 			}
 		}
-		
+
+		// Calculate where the player will be standing once the translation is accepted
 		float newX = (float) (x + delta);
 		final float newTileXPos = (newX / 32.0f);
 		final int newTileX = (int) newTileXPos;
 
+		// Check whether the location the player is moving to collides with any walls
 		if((newTileX >= 0) && (prevTileZ >= 0) && (newTileX < level.tileMap.width) && (prevTileZ < level.tileMap.height)) {
 			final int newWallColour = level.tileMap.pixels[newTileX + prevTileZ * level.tileMap.width];
 			final Wall newWall = Wall.getWall(newWallColour);
@@ -68,7 +74,7 @@ public class Camera {
 		}
 		
 		// At this point we have not encountered a wall, so the position is valid. However, we need to check that we aren't 
-		// too close to another wall
+		// too close to another wall (to avoid the camera moving through nearby walls)
 		int bufferTileX = -1;
 		if(prevTileXPos < newTileXPos) {
 			final float xSpaceRemaining = 1 - (newTileXPos % 1);
@@ -80,12 +86,12 @@ public class Camera {
 		
 		if(bufferTileX == -1) {
 			x = newX;
-		} else {			
+		} else {
 			if((bufferTileX >= 0) && (prevTileZ >= 0) && (bufferTileX < level.tileMap.width) && (prevTileZ < level.tileMap.height)) {
 				final int bufferWallColour = level.tileMap.pixels[bufferTileX + prevTileZ * level.tileMap.width];
 				final Wall bufferWall = Wall.getWall(bufferWallColour);
 				
-				// If the position we are moving to doesn't have a wall then we can move
+				// If the position we are moving to doesn't have a wall too nearby then we can move
 				if(bufferWall == null) {
 					x = newX;
 				}
@@ -97,11 +103,13 @@ public class Camera {
 		// Reserve some space around the edges of each tile, to ensure the player is not too close to a wall.
 		// This prevents the near clipping plane from touching a wall at small angles
 		final float collisionBuffer = 8.0f / 32.0f;
-		
+
+		// Calculate where the player is currently standing within the level (to the tile) before moving
 		final int prevTileX = (int) (x / 32);
 		final float prevTileZPos = (z / 32.0f) + 1;
 		final int prevTileZ = (int) prevTileZPos;
-		
+
+		// Check whether the player is colliding with any walls before moving
 		if((prevTileX >= 0) && (prevTileZ >= 0) && (prevTileX < level.tileMap.width) && (prevTileZ < level.tileMap.height)) {
 			final int prevWallColour = level.tileMap.pixels[prevTileX + prevTileZ * level.tileMap.width];
 			final Wall prevWall = Wall.getWall(prevWallColour);
@@ -114,10 +122,12 @@ public class Camera {
 			}
 		}
 
+		// Calculate where the player will be standing once the translation is accepted
 		final float newZ = (float) (z + delta);
 		final float newTileZPos = (newZ / 32.0f) + 1;
 		final int newTileZ = (int) newTileZPos;
-		
+
+		// Check whether the location the player is moving to collides with any walls
 		if((prevTileX >= 0) && (newTileZ >= 0) && (prevTileX < level.tileMap.width) && (newTileZ < level.tileMap.height)) {
 			final int newWallColour = level.tileMap.pixels[prevTileX + newTileZ * level.tileMap.width];
 			final Wall newWall = Wall.getWall(newWallColour);

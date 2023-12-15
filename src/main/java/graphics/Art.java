@@ -11,7 +11,6 @@ public class Art {
 	// Mobs
 	public static final Sprite MOB_WOLF_1;
 	public static final Sprite MOB_WOLF_2;
-	
 	public static final Sprite MOB_GHOST;
 	
 	static {

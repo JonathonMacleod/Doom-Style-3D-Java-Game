@@ -5,8 +5,10 @@ import java.util.ArrayList;
 import graphics.Entity;
 import graphics.Sprite;
 import mobs.Ghost;
+import mobs.Mob;
 import mobs.Player;
 import mobs.Wolf;
+import ui.InputHandler;
 
 public class Level {
 
@@ -38,6 +40,16 @@ public class Level {
 		return Wall.getWall(tileMap.pixels[levelX + levelZ * tileMap.width]);
 	}
 
+	public void update(InputHandler inputHandler, float delta) {
+		// Update the player
+		player.update(inputHandler, delta);
+		
+		// Update any mobs in the level
+		for(Entity currentEntity : entities) {
+			if(currentEntity instanceof Mob) ((Mob) currentEntity).update(inputHandler, delta);
+		}
+	}
+	
 	public void resetPlayer() {
 		for(int i = 0; i < entityMap.pixels.length; i++) {
 			final int currentColour = entityMap.pixels[i];

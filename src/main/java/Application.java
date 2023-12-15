@@ -2,9 +2,7 @@ import java.awt.Graphics;
 import java.awt.image.BufferStrategy;
 
 import graphics.Camera;
-import graphics.Entity;
 import graphics.RenderPane3D;
-import mobs.Mob;
 import ui.Window;
 import utils.Level;
 
@@ -42,6 +40,13 @@ public class Application {
 			return;
 		
 		isGameRunning = false;
+
+		// Now that the game loop should finish, wait for the main game thread to finish
+		try {
+			mainGameThread.join();
+		} catch (InterruptedException e) {
+			System.err.println("Failed to wait for game thread to close - " + e.getMessage() + ": " + e.getStackTrace());
+		}
 	}
 	
 	public boolean isGameRunning() { return isGameRunning; }
@@ -61,7 +66,7 @@ public class Application {
 		boolean allowUnlimitedFPS = true;
 		long maxNanosecondsBetweenRenders = 1000000000 / 60;
 		long maxNanosecondsBetweenUpdates = 1000000000 / 60;
-				
+		
 		while(isGameRunning) {
 			// Calculate the time in milliseconds since we last ran the game loop
 			long currentNanoTime = System.nanoTime();
@@ -86,7 +91,7 @@ public class Application {
 				currentFps++;
 			}
 			
-			// If a 1000 milliseconds have passed, a second has passed and we can update the 
+			// Each second reset the UPS and FPS counters
 			long currentMillis = System.currentTimeMillis();
 			if((currentMillis - lastTickTime) >= 1000) {
 				System.out.println(currentUps + "ups, " + currentFps + "fps!");
@@ -100,6 +105,7 @@ public class Application {
 	}
 	
 	private void onStartup() {
+		// Load the test level
 		currentLevel = new Level("test");
 	}
 	
@@ -108,13 +114,12 @@ public class Application {
 	}
 	
 	private void updateGame(double delta) {
-		currentLevel.player.update(window.inputHandler, (float) delta);
-		for(Entity currentEntity : currentLevel.entities) {
-			if(currentEntity instanceof Mob) ((Mob) currentEntity).update(window.inputHandler, (float) delta);
-		}
+		// Update the level and all entities within it
+		currentLevel.update(window.inputHandler, (float) delta);
 	}
 	
 	private void renderGame() {
+		// Get the Graphics instance for the JFrame to draw to the hidden buffer
 		final BufferStrategy bufferStrategy = window.getBufferStrategy();
 		final Graphics graphics = window.getDrawGraphics();
 		
@@ -124,6 +129,7 @@ public class Application {
 		renderPane.drawLevel(currentLevel);
 		graphics.drawImage(renderPane.getBufferedImage(), 0, 0, window.getWidth(), window.getHeight(), null);
 		
+		// Show the hidden buffer with the new game frame on it
 		graphics.dispose();
 		bufferStrategy.show();
 	}
