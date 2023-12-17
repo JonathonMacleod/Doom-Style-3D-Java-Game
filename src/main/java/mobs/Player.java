@@ -29,8 +29,8 @@ public class Player extends Mob {
 		
 		// Apply movement if the WASD keys are pressed
 		float xMovement = 0, zMovement = 0;
-		if(inputHandler.keyStates[KeyEvent.VK_W]) zMovement -= 1;
-		if(inputHandler.keyStates[KeyEvent.VK_S]) zMovement += 1;
+		if(inputHandler.keyStates[KeyEvent.VK_W]) zMovement += 1;
+		if(inputHandler.keyStates[KeyEvent.VK_S]) zMovement -= 1;
 		if(inputHandler.keyStates[KeyEvent.VK_A]) xMovement += 1;
 		if(inputHandler.keyStates[KeyEvent.VK_D]) xMovement -= 1;
 		final float speed = (float) (movementSpeed * delta);
