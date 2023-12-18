@@ -1,13 +1,12 @@
 package graphics;
 
 import utils.Level;
-import utils.Tile;
 import utils.Wall;
 
 public class RenderPane3D extends RenderPane {
 
-	private final float[] zBuffer;
-		
+	public final float[] zBuffer;
+
 	public RenderPane3D(int width, int height) {
 		super(width, height);		
 		zBuffer = new float[width * height];
@@ -33,176 +32,26 @@ public class RenderPane3D extends RenderPane {
 	}
 	
 	public void drawLevel(Level level) {
-		// Render the floor and ceiling
-		drawFloorAndCeilingTest(level, 2, 2, 32);
-		
 		// Draw the walls from the level tile map
-		final int playerTileX = (int) level.player.camera.x / 32;
-		final int playerTileZ = (int) level.player.camera.z / 32;
-		final int tileDrawRadius = 10;
-		final int drawTileXStart = Math.max(playerTileX - tileDrawRadius, 0);
-		final int drawTileXEnd = Math.min(playerTileX + tileDrawRadius, level.tileMap.width);
-		final int drawTileZStart = Math.max(playerTileZ - tileDrawRadius, 0);
-		final int drawTileZEnd = Math.min(playerTileZ + tileDrawRadius, level.tileMap.height);
-		for(int x = drawTileXStart; x < drawTileXEnd; x++) {
-			for(int y = drawTileZStart; y < drawTileZEnd; y++) {
-				final Wall levelWall = level.getLevelWall(x, y);
+//		final int playerTileX = (int) level.player.camera.x / 32;
+//		final int playerTileZ = (int) level.player.camera.z / 32;
+//		final int tileDrawRadius = 10;
+//		final int drawTileXStart = Math.max(playerTileX - tileDrawRadius, 0);
+//		final int drawTileXEnd = Math.min(playerTileX + tileDrawRadius, level.tileMap.width);
+//		final int drawTileZStart = Math.max(playerTileZ - tileDrawRadius, 0);
+//		final int drawTileZEnd = Math.min(playerTileZ + tileDrawRadius, level.tileMap.height);
+//		for(int x = drawTileXStart; x < drawTileXEnd; x++) {
+//			for(int y = drawTileZStart; y < drawTileZEnd; y++) {
+//				final Wall levelWall = level.getLevelWall(x, y);
 //				if(levelWall != null) drawWall(level, levelWall, x, y);
-			}
-		}
+//			}
+//		}
 
 		// Draw all entities in the level
 		//TODO: Cull entities based on their position
-		for(Entity currentEntity : level.entities) {
+//		for(Entity currentEntity : level.entities) {
 //			drawEntity(level, currentEntity);
-		}
-		
-		// Render fog on top of everything previously drawn
-		final Camera camera = level.player.camera;
-//		applyFog(camera.maxRenderDistance, 0xff010401, 0.3f);
-	}
-	
-	public void drawFloorAndCeilingTest(Level level, float floorDepth, float ceilingHeight, int tileSize) {
-		final float screenSpaceCenterX = (width / 2.0f);
-		final float screenSpaceCenterY = (height / 2.0f);
-
-		int xtest = 30;
-		int ytest = height / 2 + 35;
-		
-		// Iterate through every row in the screen to calculate the floor or ceiling colour and distance at that point
-		for(int screenSpaceY = 0; screenSpaceY < height; screenSpaceY++) {
-			// Calculate the position of the current Y pixel in clip-space (-0.5 to 0.5)
-			final float clipSpaceY = (screenSpaceY - screenSpaceCenterY) / height;
-			boolean isFloor = (clipSpaceY >= 0);
-			
-			// Calculate the distance of the current floor/ceiling pixel.
-			// This is done by finding the angle between the camera and the current pixel in the screen. Since the screen is the minimum clipping distance away
-			// from the camera, we can use: tan(angle) = clipSpaceY / min_clipping_distance.
-			// Using small angle approximations we can say that tan(angle) = angle.
-			// Now we know the angle, and we know the distance between the camera and the floor/ceiling we can calculate the distance until the interception
-			// happens using: clipSpaceZ = floor_or_ceiling_height / sin(angle)
-			final float verticalAngle = (float) level.player.camera.minRenderDistance / clipSpaceY;
-			final float floorCeilingHeight = isFloor ? (4 * tileSize - level.player.camera.y) : -(4 * tileSize + level.player.camera.y);
-			final float clipSpaceZ = floorCeilingHeight / verticalAngle;
-			
-			// Iterate through every column in the screen row to calculate the floor or ceiling colour at that point
-			for(int screenSpaceX = 0; screenSpaceX < width; screenSpaceX++) {
-				final float clipSpaceX = (screenSpaceX - screenSpaceCenterX) / width;
-
-				// Approximate the angle of the current pixel by assuming that the angle at the right-hand side is the camera FOV.
-				// Since we want the player to be looking forward, we must calculate this angle in a range between -FOV/2 and FOV/2, so at width / 2 the angle is 0.
-				final float xAngle = level.player.camera.fovRadians / 2 * clipSpaceX;
-				
-				// Calculate the relative X offset between the camera and the point projected clipSpaceZ away from the camera.
-				// Use the formula: xOffset = sin(xAngle) * clipSpaceZ, with the small-angle approximation that sin(angle) = angle
-				// to produce the formula xOffset = xAngle * clipSpaceZ.
-				final float worldSpaceXOffset = (float) Math.sin(xAngle) * clipSpaceZ;
-				
-				final float worldSpaceX = (float) (Math.cos(-level.player.camera.angle) * worldSpaceXOffset - Math.sin(-level.player.camera.angle) * clipSpaceZ) + level.player.camera.x;
-				final float worldSpaceZ = (float) (Math.sin(-level.player.camera.angle) * worldSpaceXOffset + Math.cos(-level.player.camera.angle) * clipSpaceZ) + level.player.camera.z;
-				
-//				final float rotatedClipSpaceX = (float) (Math.cos(-level.player.camera.angle) * clipSpaceX - Math.sin(-level.player.camera.angle) * clipSpaceZ);
-//				final float rotatedClipSpaceZ = (float) (Math.sin(-level.player.camera.angle) * clipSpaceX + Math.cos(-level.player.camera.angle) * clipSpaceZ);
-//				
-//				final float worldSpaceX = (rotatedClipSpaceX + level.player.camera.x);
-//				final float worldSpaceZ = (rotatedClipSpaceZ + level.player.camera.z);
-//				
-				final int worldSpaceTileX = (int) (worldSpaceX / tileSize);
-				final int worldSpaceTileZ = (int) (worldSpaceZ / tileSize);
-				
-				// Make sure the tile being drawn is within the level
-				if((worldSpaceTileX >= 0) && (worldSpaceTileX < level.tileMap.width) && (worldSpaceTileZ >= 0) && (worldSpaceTileZ < level.tileMap.height)) {
-					// Find the tile corresponding to the pixel at the location in the tile map
-					final int tileMapIndex = worldSpaceTileX + worldSpaceTileZ * level.tileMap.width;
-					final int tileMapColour = level.tileMap.pixels[tileMapIndex];
-					final Tile currentTile = isFloor ? Tile.getFloorTile(tileMapColour) : Tile.getCeilingTile(tileMapColour);
-					
-					if(currentTile != null) {
-						int xTilePixel = (int) ((Math.abs(worldSpaceX * 1.0f) % tileSize) / tileSize * currentTile.sprite.width);
-						int zTilePixel = (int) ((Math.abs(worldSpaceZ * 1.0f) % tileSize) / tileSize * currentTile.sprite.height);
-						int colour = currentTile.sprite.pixels[xTilePixel + (currentTile.sprite.height - zTilePixel - 1) * currentTile.sprite.width];
-						
-						if(xTilePixel == currentTile.sprite.width - 1) colour = 0xffff0000;
-						if(zTilePixel == currentTile.sprite.height - 1) colour = 0xffff00ff;
-						
-						if(isFloor) colour *= 12;
-//						colour = 0xff << 24 | ((int) (clipSpaceZ / 10.0) * 25) & 0x000000ff;
-						
-						pixels[screenSpaceX + screenSpaceY * width] = colour;
-						zBuffer[screenSpaceX + screenSpaceY * width] = clipSpaceZ;
-					} else pixels[screenSpaceX + screenSpaceY * width] = 0xff7f007f;
-				}
-				
-				if(screenSpaceX == xtest && screenSpaceY == ytest) {
-					pixels[xtest + ytest * width] = 0xffff00ff;
-
-					System.out.println("---- " + xtest + ", " + ytest);
-					System.out.println("ZBuffer: " + zBuffer[xtest + ytest * width]);
-					System.out.println("Floor: " + isFloor);
-					System.out.println("Clip Space X: " + clipSpaceX);
-					System.out.println("Clip Space Y: " + clipSpaceY);
-					System.out.println("Clip Space Z: " + clipSpaceZ);
-					System.out.println("World Space X: " + worldSpaceX);
-					System.out.println("World Space Z: " + worldSpaceZ);
-					System.out.println("Tile Space X: " + worldSpaceTileX);
-					System.out.println("Tile Space Z: " + worldSpaceTileZ);
-					System.out.println("");
-				}
-			}
-		}
-		
-	}
-	
-	public void drawFloorAndCeiling(Level level, float floorDepth, float ceilingHeight, int tileSize) {
-		final Camera camera = level.player.camera;
-		
-		final float xCam = (float) ((camera.x / 32.0f) - Math.sin(-camera.angle) * 0.3f);
-		final float yCam = (float) ((-camera.z / 32.0f) - Math.cos(-camera.angle) * 0.3f);
-		final float zCam = (float) (-0.2f - (camera.y / 32.0f));
-		
-		final float rCos = (float) Math.cos(-camera.angle);
-		final float rSin = (float) Math.sin(-camera.angle);
-		
-		final float xCenter = (width / 2.0f);
-		final float yCenter = (height / 2.0f);
-
-		// Iterate through every row in the screen to calculate the floor or ceiling colour at that point
-		for(int screenSpaceY = 0; screenSpaceY < height; screenSpaceY++) {
-			// Calculate whether we are in the top or bottom half of the screen (and by how much), range of -0.5 to 0.5
-			final float clipSpaceY = (screenSpaceY - yCenter) / height;
-
-			// If we are in the bottom half of the screen we are in the floor, otherwise we are in the ceiling, then calculate how far away it is
-			boolean isFloor = (clipSpaceY >= 0);
-			float clipSpaceZ = isFloor ? ((4 - zCam * 8) / clipSpaceY) : ((4 + zCam * 8) / -clipSpaceY);
-			
-			// Iterate through every column in the screen row to calculate the floor or ceiling colour at that point
-			for(int screenSpaceX = 0; screenSpaceX < width; screenSpaceX++) {
-				double clipSpaceX = (xCenter - screenSpaceX) / height * clipSpaceZ;
-
-				double worldSpaceX = (clipSpaceX * rCos + clipSpaceZ * rSin + xCam * 8) * 2;
-				double worldSpaceZ = -(clipSpaceZ * rCos - clipSpaceX * rSin + yCam * 8) * 2;
-
-				int worldSpaceTileX = (int) (worldSpaceX / tileSize);
-				int worldSpaceTileZ = (int) (worldSpaceZ / tileSize) + 1;
-				
-				// Make sure the tile being drawn is within the level
-				if((worldSpaceTileX >= 0) && (worldSpaceTileX < level.tileMap.width) && (worldSpaceTileZ >= 0) && (worldSpaceTileZ < level.tileMap.height)) {
-					// Find the tile corresponding to the pixel at the location in the tile map
-					final int tileMapIndex = worldSpaceTileX + worldSpaceTileZ * level.tileMap.width;
-					final int tileMapColour = level.tileMap.pixels[tileMapIndex];
-					final Tile currentTile = isFloor ? Tile.getFloorTile(tileMapColour) : Tile.getCeilingTile(tileMapColour);
-
-					if(currentTile != null) {
-						int xTilePixel = (int) ((Math.abs(worldSpaceX * 1.0f) % tileSize) / tileSize * currentTile.sprite.width);
-						int zTilePixel = (int) ((Math.abs(worldSpaceZ * 1.0f) % tileSize) / tileSize * currentTile.sprite.height);
-						int colour = currentTile.sprite.pixels[xTilePixel + (currentTile.sprite.height - zTilePixel - 1) * currentTile.sprite.width];
-						
-						pixels[screenSpaceX + screenSpaceY * width] = colour;
-						zBuffer[screenSpaceX + screenSpaceY * width] = clipSpaceZ * 4;
-					}
-				}
-			}
-		}
+//		}
 	}
 	
 	public void drawWall(Level level, Wall wall, double x, double z) {

@@ -4,7 +4,7 @@ import utils.Level;
 import utils.Wall;
 
 public class Camera {
-
+	
 	public final float fovRadians;
 	public float x, y, z, angle;
 	public final float minRenderDistance, maxRenderDistance;
@@ -15,7 +15,7 @@ public class Camera {
 		x = 0;
 		y = 0;
 		z = 0;
-		angle = (float) Math.PI;
+		angle = 0;
 		
 		minRenderDistance = nearPlane;
 		maxRenderDistance = farPlane;
@@ -35,14 +35,14 @@ public class Camera {
 	}
 	
 	private void applyXMovement(Level level, float delta) {
-		// Reserve some space around the edges of each tile, to ensure the player is not too close to a wall.
-		// This prevents the near clipping plane from touching a wall at small angles
-		final float collisionBuffer = 8.0f / 32.0f;
+		// Reserve some space around the edges of each tile, to ensure the player is not too close to a wall. This prevents the near clipping plane from 
+		// touching a wall at small angles.
+		final float collisionBuffer = 2 * minRenderDistance;
 		
 		// Calculate where the player is currently standing within the level (to the tile) before moving
-		final float prevTileXPos = (x / 32.0f);
+		final float prevTileXPos = (x / level.tileSize);
 		final int prevTileX = (int) prevTileXPos;
-		final int prevTileZ = ((int) z / 32) + 1;
+		final int prevTileZ = (int) (z / level.tileSize);
 
 		// Check whether the player is colliding with any walls before moving
 		if((prevTileX >= 0) && (prevTileZ >= 0) && (prevTileX < level.tileMap.width) && (prevTileZ < level.tileMap.height)) {
@@ -59,7 +59,7 @@ public class Camera {
 
 		// Calculate where the player will be standing once the translation is accepted
 		float newX = (float) (x + delta);
-		final float newTileXPos = (newX / 32.0f);
+		final float newTileXPos = (newX / level.tileSize);
 		final int newTileX = (int) newTileXPos;
 
 		// Check whether the location the player is moving to collides with any walls
@@ -100,13 +100,13 @@ public class Camera {
 	}
 	
 	private void applyZMovement(Level level, float delta) {
-		// Reserve some space around the edges of each tile, to ensure the player is not too close to a wall.
-		// This prevents the near clipping plane from touching a wall at small angles
-		final float collisionBuffer = 8.0f / 32.0f;
+		// Reserve some space around the edges of each tile, to ensure the player is not too close to a wall. This prevents the near clipping plane from 
+		// touching a wall at small angles.
+		final float collisionBuffer = 2 * minRenderDistance;
 
 		// Calculate where the player is currently standing within the level (to the tile) before moving
-		final int prevTileX = (int) (x / 32);
-		final float prevTileZPos = (z / 32.0f) + 1;
+		final int prevTileX = (int) (x / level.tileSize);
+		final float prevTileZPos = (z / level.tileSize);
 		final int prevTileZ = (int) prevTileZPos;
 
 		// Check whether the player is colliding with any walls before moving
@@ -124,7 +124,7 @@ public class Camera {
 
 		// Calculate where the player will be standing once the translation is accepted
 		final float newZ = (float) (z + delta);
-		final float newTileZPos = (newZ / 32.0f) + 1;
+		final float newTileZPos = (newZ / level.tileSize);
 		final int newTileZ = (int) newTileZPos;
 
 		// Check whether the location the player is moving to collides with any walls

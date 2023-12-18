@@ -1,7 +1,6 @@
 import java.awt.Graphics;
 import java.awt.image.BufferStrategy;
 
-import graphics.Camera;
 import graphics.RenderPane3D;
 import ui.Window;
 import utils.Level;
@@ -124,9 +123,10 @@ public class Application {
 		final Graphics graphics = window.getDrawGraphics();
 		
 		// Clear, draw to, and display the render pane on the canvas draw graphics
-		final Camera camera = currentLevel.player.camera;
-		if(camera != null) renderPane.clear(camera.maxRenderDistance);
-		renderPane.drawLevel(currentLevel);
+		if(currentLevel != null) {
+			renderPane.clear(currentLevel.player.camera.maxRenderDistance);
+			currentLevel.drawLevel(renderPane);
+		}
 		graphics.drawImage(renderPane.getBufferedImage(), 0, 0, window.getWidth(), window.getHeight(), null);
 		
 		// Show the hidden buffer with the new game frame on it
