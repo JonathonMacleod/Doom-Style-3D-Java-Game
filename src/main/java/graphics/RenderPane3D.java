@@ -30,30 +30,7 @@ public class RenderPane3D extends RenderPane {
 		zBuffer[pixelIndex] = z;
 		pixels[pixelIndex] = colour;
 	}
-	
-	public void drawLevel(Level level) {
-		// Draw the walls from the level tile map
-//		final int playerTileX = (int) level.player.camera.x / 32;
-//		final int playerTileZ = (int) level.player.camera.z / 32;
-//		final int tileDrawRadius = 10;
-//		final int drawTileXStart = Math.max(playerTileX - tileDrawRadius, 0);
-//		final int drawTileXEnd = Math.min(playerTileX + tileDrawRadius, level.tileMap.width);
-//		final int drawTileZStart = Math.max(playerTileZ - tileDrawRadius, 0);
-//		final int drawTileZEnd = Math.min(playerTileZ + tileDrawRadius, level.tileMap.height);
-//		for(int x = drawTileXStart; x < drawTileXEnd; x++) {
-//			for(int y = drawTileZStart; y < drawTileZEnd; y++) {
-//				final Wall levelWall = level.getLevelWall(x, y);
-//				if(levelWall != null) drawWall(level, levelWall, x, y);
-//			}
-//		}
-
-		// Draw all entities in the level
-		//TODO: Cull entities based on their position
-//		for(Entity currentEntity : level.entities) {
-//			drawEntity(level, currentEntity);
-//		}
-	}
-	
+		
 	public void drawWall(Level level, Wall wall, double x, double z) {
 		final float tileSize = 1;
 		drawWallSurface(level, x + tileSize, -z, x, -z, wall.sprite);

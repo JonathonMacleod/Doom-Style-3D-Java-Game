@@ -18,7 +18,7 @@ public class Player extends Mob {
 	@Override
 	public void update(InputHandler inputHandler, float delta) {
 		//TODO: Remove jumping
-		camera.y = (float) Math.abs(Math.sin(Math.toRadians((System.currentTimeMillis() / 5) % 360))) * 16;
+//		camera.y = (float) Math.abs(Math.sin(Math.toRadians((System.currentTimeMillis() / 5) % 360))) * 16;
 		
 		// Apply rotation if the LEFT or RIGHT arrow keys are pressed
 		final float rotationSpeed = (float) ((2 * Math.PI) * 0.65f * delta);
