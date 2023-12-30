@@ -47,19 +47,19 @@ public class Level {
 	public void drawLevel(RenderPane3D renderPane) {
 		ceilingTileHeight = 4;
 		floorTileDepth = 8;
-		tileSize = 16;
 
 		int x = 40;
 		int z = 37;
 		
 		// Draw the floor and ceiling tiles of the level to the render pane based on the player's camera location.
 		drawLevelFloorAndCeiling(renderPane, x, z);
-
-		drawWall(renderPane, x, z);
 		
-		for(int i = x; i < x + 2; i++) {
-			for(int j = z; j < z + 2; j++) {
-				drawWall(renderPane, i, j);
+		for(int levelTileY = 0; levelTileY < tileMap.height; levelTileY++) {
+			for(int levelTileX = 0; levelTileX < tileMap.width; levelTileX++) {
+				final Wall currentWall = getLevelWall(levelTileX, levelTileY);
+				if(currentWall != null) {
+					drawWall(renderPane, currentWall, levelTileX, levelTileY);
+				}
 			}
 		}
 		
@@ -226,11 +226,11 @@ public class Level {
 		}
 	}
 
-	private void drawWall(final RenderPane3D renderPane, final int wallWorldSpaceTileX, final int wallWorldSpaceTileZ) {
-		drawWallSurface(renderPane, Art.WALL_BRICK, wallWorldSpaceTileX, wallWorldSpaceTileZ, 1, 0);
-		drawWallSurface(renderPane, Art.WALL_BRICK, wallWorldSpaceTileX + 1, wallWorldSpaceTileZ, 0, 1);
-		drawWallSurface(renderPane, Art.WALL_BRICK, wallWorldSpaceTileX + 1, wallWorldSpaceTileZ + 1, -1, 0);
-		drawWallSurface(renderPane, Art.WALL_BRICK, wallWorldSpaceTileX, wallWorldSpaceTileZ + 1, 0, -1);
+	private void drawWall(final RenderPane3D renderPane, final Wall wall, final int wallWorldSpaceTileX, final int wallWorldSpaceTileZ) {
+		drawWallSurface(renderPane, wall.sprite, wallWorldSpaceTileX, wallWorldSpaceTileZ, 1, 0);
+		drawWallSurface(renderPane, wall.sprite, wallWorldSpaceTileX + 1, wallWorldSpaceTileZ, 0, 1);
+		drawWallSurface(renderPane, wall.sprite, wallWorldSpaceTileX + 1, wallWorldSpaceTileZ + 1, -1, 0);
+		drawWallSurface(renderPane, wall.sprite, wallWorldSpaceTileX, wallWorldSpaceTileZ + 1, 0, -1);
 	}
 	
 	private void drawWallSurface(final RenderPane3D renderPane, final Sprite sprite, final int wallWorldSpaceTileX, final int wallWorldSpaceTileZ, final int wallWorldSpaceTileXLength, final int wallWorldSpaceTileZDepth) {
@@ -242,7 +242,7 @@ public class Level {
 
 		// Calculate the X and Z positions of the left and right sides of the wall relative to the camera
 		final float relativeWallLeftWorldSpaceTileX = (wallWorldSpaceTileX - worldSpaceCameraTileX) * 2;
-		final float relativeWallLeftWorldSpaceTileZ = (wallWorldSpaceTileZ - worldSpaceCameraTileZ) * 2;
+		final float relativeWallLeftWorldSpaceTileZ = (wallWorldSpaceTileZ - worldSpaceCameraTileZ) * 2  ;
 		final float relativeWallRightWorldSpaceTileX = (wallWorldSpaceTileX + wallWorldSpaceTileXLength - worldSpaceCameraTileX) * 2;
 		final float relativeWallRightWorldSpaceTileZ = (wallWorldSpaceTileZ + wallWorldSpaceTileZDepth - worldSpaceCameraTileZ) * 2;
 		
@@ -296,8 +296,8 @@ public class Level {
 		}
 		
 		// Calculate the screen positions of the wall
-		final int actualScreenSpaceLeft = (int) ((visibleWallLeftWorldSpaceTileX / visibleWallLeftWorldSpaceTileZ) * renderPane.height + (renderPane.width / 2.0f));
-		final int actualScreenSpaceRight = (int) ((visibleWallRightWorldSpaceTileX / visibleWallRightWorldSpaceTileZ) * renderPane.height + (renderPane.width / 2.0f));
+		final int actualScreenSpaceLeft = (int) ((visibleWallLeftWorldSpaceTileX / visibleWallLeftWorldSpaceTileZ) * renderPane.width + (renderPane.width / 2.0f));
+		final int actualScreenSpaceRight = (int) ((visibleWallRightWorldSpaceTileX / visibleWallRightWorldSpaceTileZ) * renderPane.width + (renderPane.width / 2.0f));
 		final float actualScreenWidth = (float) (actualScreenSpaceRight - actualScreenSpaceLeft);
 
 		// If the right hand side of the wall is being drawn to the left of the left hand side of the wall we are seeing the wall from behind, so don't render it
@@ -310,16 +310,16 @@ public class Level {
 		final int screenSpaceRight = actualScreenSpaceRight > renderPane.width ? renderPane.width : actualScreenSpaceRight;
 		
 		// Calculate the screen position of the bottom and top of the wall at both the left and right sides
-		final int screenSpaceLeftTop = (int) ((wallTop / visibleWallLeftWorldSpaceTileZ) * renderPane.height + (renderPane.height / 2.0f) + Math.cos((screenSpaceLeft - renderPane.width) / renderPane.width));
-		final int screenSpaceLeftBottom = (int) ((wallBottom / visibleWallLeftWorldSpaceTileZ) * renderPane.height + (renderPane.height / 2.0f) + Math.cos((screenSpaceLeft - renderPane.width) / renderPane.width));
-		final int screenSpaceRightTop = (int) ((wallTop / visibleWallRightWorldSpaceTileZ) * renderPane.height + (renderPane.height / 2.0f) + Math.cos((screenSpaceRight - renderPane.width) / renderPane.width));
-		final int screenSpaceRightBottom = (int) ((wallBottom / visibleWallRightWorldSpaceTileZ) * renderPane.height + (renderPane.height / 2.0f) + Math.cos((screenSpaceRight - renderPane.width) / renderPane.width));
+		final int screenSpaceLeftTop = (int) ((wallTop / visibleWallLeftWorldSpaceTileZ) * renderPane.height + (renderPane.height / 2.0f));
+		final int screenSpaceLeftBottom = (int) ((wallBottom / visibleWallLeftWorldSpaceTileZ) * renderPane.height + (renderPane.height / 2.0f));
+		final int screenSpaceRightTop = (int) ((wallTop / visibleWallRightWorldSpaceTileZ) * renderPane.height + (renderPane.height / 2.0f));
+		final int screenSpaceRightBottom = (int) ((wallBottom / visibleWallRightWorldSpaceTileZ) * renderPane.height + (renderPane.height / 2.0f));
 		
 		for(int screenSpaceX = screenSpaceLeft; screenSpaceX < screenSpaceRight; screenSpaceX++) {
 			final float xPercentage = (float) (screenSpaceX - screenSpaceLeft) / (screenSpaceRight - screenSpaceLeft);
 			final float currentZ = visibleWallLeftWorldSpaceTileZ + (visibleWallRightWorldSpaceTileZ - visibleWallLeftWorldSpaceTileZ) * xPercentage;
 
-			final int currentActualWallTop = (int) (screenSpaceLeftTop + (screenSpaceRightTop - screenSpaceLeftTop) * xPercentage);
+			final int currentActualWallTop = (int) (screenSpaceLeftTop + (screenSpaceRightTop - screenSpaceLeftTop) * xPercentage - 0.5);
 			final int currentActualWallBottom = (int) (screenSpaceLeftBottom + (screenSpaceRightBottom - screenSpaceLeftBottom) * xPercentage);
 			final float currentActualWallHeight = (float) (currentActualWallBottom - currentActualWallTop);
 			

@@ -32,7 +32,7 @@ public class RenderPane3D extends RenderPane {
 	}
 		
 	public void drawWall(Level level, Wall wall, double x, double z) {
-		final float tileSize = 1;
+		final float tileSize = 12;
 		drawWallSurface(level, x + tileSize, -z, x, -z, wall.sprite);
 		drawWallSurface(level, x, -z + tileSize, x + tileSize, -z + tileSize, wall.sprite);
 		drawWallSurface(level, x, -z, x, -z + tileSize, wall.sprite);
@@ -40,6 +40,7 @@ public class RenderPane3D extends RenderPane {
 	}
 	
 	private void drawWallSurface(Level level, double x0, double y0, double x1, double y1, Sprite sprite) {
+		if(level.player == null) return;
 		final Camera camera = level.player.camera;
 		
 		final float xCam = (float) ((camera.x / 32.0f) - Math.sin(-camera.angle) * 0.3f);
@@ -55,39 +56,30 @@ public class RenderPane3D extends RenderPane {
 		
 		double xc0 = ((x0) - xCam) * 2;
 		double yc0 = ((y0) - yCam) * 2;
-
 		double xx0 = xc0 * rCos - yc0 * rSin;
 		double u0 = (-0.5 - zCam) * 2;
 		double l0 = (0.5 - zCam) * 2;
 		double zz0 = yc0 * rCos + xc0 * rSin;
-
 		double xc1 = ((x1 - 0) - xCam) * 2;
 		double yc1 = ((y1 - 0) - yCam) * 2;
-
 		double xx1 = xc1 * rCos - yc1 * rSin;
 		double u1 = ((-0.5) - zCam) * 2;
 		double l1 = (0.5 - zCam) * 2;
 		double zz1 = yc1 * rCos + xc1 * rSin;
-
 		double zClip = camera.minRenderDistance;
-
 		if (zz0 < zClip && zz1 < zClip) return;
-
 		if (zz0 < zClip) {
 			double p = (zClip - zz0) / (zz1 - zz0);
 			zz0 = zz0 + (zz1 - zz0) * p;
 			xx0 = xx0 + (xx1 - xx0) * p;
 		}
-
 		if (zz1 < zClip) {
 			double p = (zClip - zz0) / (zz1 - zz0);
 			zz1 = zz0 + (zz1 - zz0) * p;
 			xx1 = xx0 + (xx1 - xx0) * p;
 		}
-
 		double xPixel0 = xCenter - (xx0 / zz0 * fov);
 		double xPixel1 = xCenter - (xx1 / zz1 * fov);
-
 		if (xPixel0 >= xPixel1) return;
 		int xp0 = (int) Math.ceil(xPixel0);
 		int xp1 = (int) Math.ceil(xPixel1);
@@ -95,40 +87,32 @@ public class RenderPane3D extends RenderPane {
 		int wallStart = xp0;
 		if (xp0 < 0) xp0 = 0;
 		if (xp1 > width) xp1 = width;
-
 		double yPixel00 = (u0 / zz0 * fov + yCenter);
 		double yPixel01 = (l0 / zz0 * fov + yCenter);
 		double yPixel10 = (u1 / zz1 * fov + yCenter);
 		double yPixel11 = (l1 / zz1 * fov + yCenter);
-
 		double iz0 = 1 / zz0;
 		double iz1 = 1 / zz1;
-
 		double iza = iz1 - iz0;
-
 		double iw = 1 / (xPixel1 - xPixel0);
-
 		for (int x = xp0; x < xp1; x++) {
 			double pr = (x - xPixel0) * iw;
 			double iz = iz0 + iza * pr;
-
 			double yPixel0 = yPixel00 + (yPixel10 - yPixel00) * pr;
 			double yPixel1 = yPixel01 + (yPixel11 - yPixel01) * pr;
-
 			int yp0 = (int) Math.floor(yPixel0);
 			int yp1 = (int) Math.ceil(yPixel1);
 			int wallHeight = Math.abs(yp1 - yp0); 
 			int wallTop = yp0;
 			if (yp0 < 0) yp0 = 0;
 			if (yp1 > height) yp1 = height;
-
 			int spriteX = (int) ((((x - wallStart) * 1.0f) / wallWidth) * sprite.width); 
 			
 			for (int y = yp0; y < yp1; y++) {
 				int spriteY = (int) ((((y - wallTop) * 1.0f) / wallHeight) * sprite.height);
 				
 				int colour = sprite.pixels[spriteX + spriteY * sprite.width];
-				setPixel(x, y, (float) (1 / (iz / 16.0f)), colour);
+				setPixel(x, y, (float) (1 / (iz / 16.0f)) * 0, colour);
 			}
 		}
 	}
