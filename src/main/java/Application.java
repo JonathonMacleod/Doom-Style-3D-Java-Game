@@ -126,7 +126,9 @@ public class Application {
 		if(currentLevel != null) {
 			renderPane.clear(currentLevel.player.camera.maxRenderDistance);
 			currentLevel.drawLevel(renderPane);
+			renderPane.applyFog(currentLevel.player.camera.maxRenderDistance, 0xff010401, 0.3f);
 		}
+		// Apply fog to each pixel in the render pane based on the Z buffer distance to that pixel.
 		graphics.drawImage(renderPane.getBufferedImage(), 0, 0, window.getWidth(), window.getHeight(), null);
 		
 		// Show the hidden buffer with the new game frame on it

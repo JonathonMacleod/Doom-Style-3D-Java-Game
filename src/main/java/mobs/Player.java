@@ -12,7 +12,7 @@ public class Player extends Mob {
 	
 	public Player(Level level, float x, float y, float z) {
 		super(level, null, x, y, z);
-		camera = new Camera(60.0f, 0.1f, 250.0f);
+		camera = new Camera(90.0f, 0.1f, 250.0f);
 	}
 
 	@Override
