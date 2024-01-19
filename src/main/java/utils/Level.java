@@ -2,6 +2,7 @@ package utils;
 
 import java.util.ArrayList;
 
+import graphics.Camera;
 import graphics.Entity;
 import graphics.RenderPane3D;
 import graphics.Sprite;
@@ -13,9 +14,7 @@ import ui.InputHandler;
 
 public class Level {
 
-	public float tileSize = 16.0f;
-	public float floorTileDepth = 4.0f;
-	public float ceilingTileHeight = 4.0f;
+	public int tileSize = 16;
 	
 	public final Sprite tileMap;
 	public final Sprite entityMap;
@@ -43,30 +42,7 @@ public class Level {
 	}
 	
 	public void drawLevel(RenderPane3D renderPane) {
-		ceilingTileHeight = 4;
-		floorTileDepth = 8;
-
-		int x = 40;
-		int z = 37;
-		
-		// Draw the floor and ceiling tiles of the level to the render pane based on the player's camera location.
-		drawLevelFloorAndCeiling(renderPane, x, z);
-		
-		final int wallRenderRadius = 25;
-		final int wallCameraX = (int) (player.camera.x / tileSize);
-		final int wallCameraZ = (int) (player.camera.z / tileSize);
-		final int startWallX = Math.max(0, wallCameraX - wallRenderRadius);
-		final int endWallX = Math.min(tileMap.width, wallCameraX + wallRenderRadius);
-		final int startWallZ = Math.max(0, wallCameraZ - wallRenderRadius);
-		final int endWallZ = Math.min(tileMap.height, wallCameraZ + wallRenderRadius);
-		for(int levelTileY = startWallZ; levelTileY < endWallZ; levelTileY++) {
-			for(int levelTileX = startWallX; levelTileX < endWallX; levelTileX++) {
-				final Wall currentWall = getLevelWall(levelTileX, levelTileY);
-				if(currentWall != null) {
-					drawWall(renderPane, currentWall, levelTileX, levelTileY);
-				}
-			}
-		}
+		drawWallsFloorAndCeiling(renderPane);
 	}
 
 	public void resetPlayer() {
@@ -82,7 +58,7 @@ public class Level {
 				player.camera.x = pixelX * tileSize + 16;
 				player.camera.y = 0;
 				player.camera.z = pixelZ * tileSize - 16;
-				player.camera.angle = (float) Math.PI;
+				player.camera.angle = 0 * (float) Math.PI;
 				
 				break;
 			}
@@ -121,317 +97,108 @@ public class Level {
 		return Wall.getWall(tileMap.pixels[levelX + levelZ * tileMap.width]);
 	}
 	
-	private void drawLevelFloorAndCeiling(final RenderPane3D renderPane, int targetX, int targetZ) {
-		final float screenSpaceCenterX = (renderPane.width / 2.0f);
-		final float screenSpaceCenterY = (renderPane.height / 2.0f);
+	private void drawWallsFloorAndCeiling(final RenderPane3D renderPane) {
+		final float cameraTileX = player.camera.x / tileSize;
+		final float cameraTileZ = player.camera.z / tileSize;
 		
-		// Calculate the sin and cosine of the negative camera angle (as the math used for rotation depends on counter clockwise, but we rotate clockwise).
-		final float cameraAngleCos = (float) Math.cos(-player.camera.angle);
-		final float cameraAngleSin = (float) Math.sin(-player.camera.angle);
+		final float horizontalRayAngleIncrement = (player.camera.fovRadians / renderPane.width);
+		final float startingHorizontalRayAngle = -(player.camera.fovRadians / 2);
+		
+        for(int screenX = 0; screenX < renderPane.width; screenX++) {
+        	// Calculate the angle of the ray being fired relative to the center of the screen (-FOV/2 to FOV/2)
+        	float horizontalAngle = startingHorizontalRayAngle + horizontalRayAngleIncrement * screenX;
+        	// Calculate the angle of the ray being fired (adjusted for the camera's angle offset)
+        	float rayAngle = player.camera.angle + horizontalAngle;
+        	
+            // Draw the floor and ceiling for the current screen column
+        	drawWallColumn(renderPane, screenX, cameraTileX, cameraTileZ, horizontalAngle, rayAngle);
+        	drawFloorAndCeilingColumn(renderPane, screenX, cameraTileX, cameraTileZ, horizontalAngle, rayAngle);
+        }
+    }
+	
+	private void drawWallColumn(final RenderPane3D renderPane, final int screenX, final float cameraTileX, final float cameraTileZ, final float horizontalAngle, final float rayAngle) {
+		// This constant controls how accurate the ray distance is by determining how much a ray moves before wall collision is checked
+		final float rayPrecision = 0.01f;
+		final int maximumRayIncrement = (int) (16 / rayPrecision);
+		
+		// Work out the current position of the ray being cast to find walls, and also how much it should travel in each direction based on it's angle
+    	float currentRayTileX = cameraTileX;
+    	float currentRayTileZ = cameraTileZ;
+    	final float rayXDelta = (float) Math.sin(rayAngle) * rayPrecision;
+    	final float rayZDelta = (float) Math.cos(rayAngle) * rayPrecision;
+    	
+    	// Search for a wall
+    	Wall collidedWall = null;
+    	float wallSpriteHorizontalPercentage = 0;
+    	for(int i = 0; i < maximumRayIncrement; i++) {
+    		// Move the ray based on it's angle, and if the ray is out of the map then stop trying to find walls
+    		// Move one axis at a time to avoid clipping diagonally through walls
+    		currentRayTileX += rayXDelta;
+    		collidedWall = getLevelWall((int) currentRayTileX, (int) currentRayTileZ);
+    		if(collidedWall != null) {
+    			wallSpriteHorizontalPercentage = currentRayTileZ % 1;
+    			break;
+    		}
+    		currentRayTileZ += rayZDelta;
+    		collidedWall = getLevelWall((int) currentRayTileX, (int) currentRayTileZ);
+    		if(collidedWall != null) {
+    			wallSpriteHorizontalPercentage = currentRayTileX % 1;
+    			break;
+    		}
 
-		// Iterate through every row in the screen to calculate the floor or ceiling colour and distance at that point.
-		for(int screenSpaceY = 0; screenSpaceY < renderPane.height; screenSpaceY++) {
-			// Calculate the position of the current screen space Y position (0 to height - 1) in clip-space (-0.5 to 0.5).
-			final float clipSpaceY = (screenSpaceY - screenSpaceCenterY) / renderPane.height;
-			boolean isFloor = (clipSpaceY >= 0);
-			
-			// Calculate the distance of the current floor/ceiling tiles at this row in the screen space.
-			// This is done by finding the angle between the camera and the current position in the clip space. Since the render pane is the camera's minimum
-			// render distance away from the camera position, we can use the right-angle triangle formula: 
-			// tan(angle) = opposite / adjacent = clipSpaceY / min_clipping_distance
-			//
-			// Since the angle should be small, we can get away with using small angle approximations to say:
-			// tan(angle) = angle
-			//
-			// Now we know the angle, and we know the distance between the camera and the floor/ceiling using the depth and height constants, we can calculate
-			// the distance until a ray fired at that angle would intercept the floor or ceiling using: 
-			// clipSpaceZ = floor_or_ceiling_height / sin(angle)
-			//
-			// Or using another small angle approximation:
-			// sin(angle) = angle
-			// clipSpaceZ = floor_or_ceiling_height / angle
-			final float verticalAngle = (float) clipSpaceY / player.camera.minRenderDistance;
-			final float floorCeilingHeight = isFloor ? (floorTileDepth * tileSize + player.camera.y) : (-ceilingTileHeight * tileSize + player.camera.y);
-			float clipSpaceZ = floorCeilingHeight / verticalAngle;
-
-			// At clipSpaceY values of 0, clipSpaceZ values will be infinity, so ensure that the distance of the floor and ceiling is within the maximum render
-			// distance to save computation.
-			if(clipSpaceZ > player.camera.maxRenderDistance) continue;
-			
-			// Iterate through every column in the screen row to calculate the floor or ceiling colour at that point.
-			for(int screenSpaceX = 0; screenSpaceX < renderPane.width; screenSpaceX++) {
-				// Calculate the position of the current screen space X position (0 to width - 1) in clip-space (-0.5 to 0.5).
-				final float clipSpaceX = (screenSpaceX - screenSpaceCenterX) / renderPane.width;
-
-				// Approximate the angle of the current pixel by assuming that the angle at the right-hand side is the camera FOV. Since we want the player to
-				// be looking forward, we must calculate this angle in a range between -FOV/2 and FOV/2, so at width / 2 the angle is 0.
-				final float horizontalAngle = player.camera.fovRadians * clipSpaceX;
-				
-				// Calculate the relative X offset between the camera and the floor/ceiling at a distance of clipSpaceZ from the camera using 
-				// the right-angle triangle formula: xOffset = tan(horizontalAngle) * clipSpaceZ.
-				// Using small angle approximations we can also use sin(angle) = angle to say: xOffset = horizontalAngle * clipSpaceZ
-				final float worldSpaceXOffset = horizontalAngle * clipSpaceZ;
-				
-				// Rotate the projection plane x offset and the clip space z distance around the camera position.
-				final float worldSpaceX = (cameraAngleCos * worldSpaceXOffset - cameraAngleSin * clipSpaceZ) + player.camera.x;
-				final float worldSpaceZ  = (cameraAngleSin * worldSpaceXOffset + cameraAngleCos * clipSpaceZ) + player.camera.z;
-
-				// Calculate the current tile coordinate at the world space position for the current pixel.
-				final int worldSpaceTileX = (int) (worldSpaceX / tileSize);
-				final int worldSpaceTileZ = (int) (worldSpaceZ / tileSize);
-				
-				// Make sure the tile being drawn is within the level.
-				if((worldSpaceTileX >= 0) && (worldSpaceTileX < tileMap.width) && (worldSpaceTileZ >= 0) && (worldSpaceTileZ < tileMap.height)) {
-					// Find the tile corresponding to the tile location in the tile map.
-					final int tileMapIndex = worldSpaceTileX + worldSpaceTileZ * tileMap.width;
-					final int tileMapColour = tileMap.pixels[tileMapIndex];
-					final Tile currentTile = isFloor ? Tile.getFloorTile(tileMapColour) : Tile.getCeilingTile(tileMapColour);
-					
-					// If we have a tile at the location in the tile map then draw it.
-					if(currentTile != null) {
-						// Calculate how far through the tile sprite we are based on the world position and the tile size, then find the colour of the pixel at that sprite position.
-						int xTilePixel = (int) ((Math.abs(worldSpaceX * 1.0f) % tileSize) / tileSize * currentTile.sprite.width);
-						int zTilePixel = (int) ((Math.abs(worldSpaceZ * 1.0f) % tileSize) / tileSize * currentTile.sprite.height);
-						int colour = currentTile.sprite.pixels[xTilePixel + (currentTile.sprite.height - zTilePixel - 1) * currentTile.sprite.width];
-						
-						if(worldSpaceTileX == 45 && worldSpaceTileZ == 39) colour = 0xffff00ff;
-						
-						if(xTilePixel == 0) colour = 0xffff00ff;
-						if(zTilePixel == 0) colour = 0xff7f007f;
-						
-						if(worldSpaceTileX == targetX && worldSpaceTileZ == targetZ) colour = 0xff77ff;
-						
-						renderPane.setPixel(screenSpaceX, screenSpaceY, clipSpaceZ, colour);
-					}
-				}
-			}
-		}
-	}
-
-	private void drawWall(final RenderPane3D renderPane, final Wall wall, final int wallWorldSpaceTileX, final int wallWorldSpaceTileZ) {
-		// Draw the four surfaces of the wall
-		//TODO: Cull these surfaces so only relevant ones are drawn
-		drawWallSurface(renderPane, wall.sprite, wallWorldSpaceTileX, wallWorldSpaceTileZ, 1, 0);
-		drawWallSurface(renderPane, wall.sprite, wallWorldSpaceTileX + 1, wallWorldSpaceTileZ, 0, 1);
-		drawWallSurface(renderPane, wall.sprite, wallWorldSpaceTileX + 1, wallWorldSpaceTileZ + 1, -1, 0);
-		drawWallSurface(renderPane, wall.sprite, wallWorldSpaceTileX, wallWorldSpaceTileZ + 1, 0, -1);
+    		// Check whether the ray has left the tile map, and if so stop trying to find further walls
+    		if((currentRayTileX < 0) || (currentRayTileZ < 0) || (currentRayTileX >= tileMap.width) || (currentRayTileZ >= tileMap.height)) break;
+    	}
+        
+        // If a wall was found, calculate how far away it is and draw it to the screen
+        if(collidedWall != null) {
+        	final float rayTileXDistanceSquared = (currentRayTileX - cameraTileX) * (currentRayTileX - cameraTileX);
+        	final float rayTileZDistanceSquared = (currentRayTileZ - cameraTileZ) * (currentRayTileZ - cameraTileZ);
+        	final float wallTileDistance = (float) Math.sqrt(rayTileXDistanceSquared + rayTileZDistanceSquared) * (float) Math.cos(horizontalAngle);
+        	
+        	final int screenWallHeight = (int) ((16 * tileSize) / wallTileDistance);
+        	
+        	int wallSpriteX = (int) (wallSpriteHorizontalPercentage * collidedWall.sprite.width);
+        	
+        	final float wallDistance = wallTileDistance * tileSize;
+        	final int screenWallTop = (renderPane.height / 2) - (screenWallHeight / 2);
+        	final int screenWallBottom = (renderPane.height / 2) + (screenWallHeight / 2);
+        	
+        	for(int screenY = Math.max(0, screenWallTop); screenY < Math.min(renderPane.height, screenWallBottom); screenY++) {
+        		final float wallSpriteVerticalPercentage = (screenY - screenWallTop) / (1.0f * screenWallHeight);
+        		final int wallSpriteY = (int) (wallSpriteVerticalPercentage * collidedWall.sprite.height);
+        		
+        		final int colour = collidedWall.sprite.pixels[wallSpriteX + wallSpriteY * collidedWall.sprite.width];
+        		renderPane.setPixel(screenX, screenY, wallDistance, colour);
+        	}
+        }
+		
 	}
 	
-	private void drawWallSurface2(final RenderPane3D renderPane, final Sprite sprite, final int wallWorldSpaceTileX, final int wallWorldSpaceTileZ, final int wallWorldSpaceTileXLength, final int wallWorldSpaceTileZDepth) {
-		final float cameraAngleSin = (float) Math.sin(player.camera.angle);
-		final float cameraAngleCos = (float) Math.cos(player.camera.angle);
-		final float worldSpaceCameraTileX = (player.camera.x / tileSize);
-		final float worldSpaceCameraTileY = (player.camera.y / tileSize);
-		final float worldSpaceCameraTileZ = (player.camera.z / tileSize);
-
-		// Calculate the X and Z positions of the left and right sides of the wall relative to the camera
-		final float relativeWallLeftWorldSpaceTileX = (wallWorldSpaceTileX - worldSpaceCameraTileX) * 2;
-		final float relativeWallLeftWorldSpaceTileZ = (wallWorldSpaceTileZ - worldSpaceCameraTileZ) * 2;
-		final float relativeWallRightWorldSpaceTileX = (wallWorldSpaceTileX + wallWorldSpaceTileXLength - worldSpaceCameraTileX) * 2;
-		final float relativeWallRightWorldSpaceTileZ = (wallWorldSpaceTileZ + wallWorldSpaceTileZDepth - worldSpaceCameraTileZ) * 2;
+	private void drawFloorAndCeilingColumn(final RenderPane3D renderPane, final int screenX, final float cameraTileX, final float cameraTileZ, final float horizontalAngle, final float rayAngle) {
+		final int halfScreenHeight = (renderPane.height / 2);
 		
-		// Rotate the wall positions around the camera based on where the camera is currently looking
-		final float rotatedRelativeWallLeftWorldSpaceTileX = relativeWallLeftWorldSpaceTileX * cameraAngleCos - relativeWallLeftWorldSpaceTileZ * cameraAngleSin + 0.3f * cameraAngleCos;
-		final float rotatedRelativeWallLeftWorldSpaceTileZ = relativeWallLeftWorldSpaceTileZ * cameraAngleCos + relativeWallLeftWorldSpaceTileX * cameraAngleSin + 0.3f * cameraAngleSin;
-		final float rotatedRelativeWallRightWorldSpaceTileX = relativeWallRightWorldSpaceTileX * cameraAngleCos - relativeWallRightWorldSpaceTileZ * cameraAngleSin + 0.3f * cameraAngleCos;
-		final float rotatedRelativeWallRightWorldSpaceTileZ = relativeWallRightWorldSpaceTileZ * cameraAngleCos + relativeWallRightWorldSpaceTileX * cameraAngleSin + 0.3f * cameraAngleSin;
-		
-		// Calculate the vertical wall positions using the known ceiling and floor positions
-		final float wallTop = (-0.5f + worldSpaceCameraTileY) * (ceilingTileHeight / 2);
-		final float wallBottom = (0.5f + worldSpaceCameraTileY) * (floorTileDepth / 2);
-		
-		// If both the left and right sides of the wall are behind the minimum render distance then stop rendering
-		if((rotatedRelativeWallLeftWorldSpaceTileZ < player.camera.minRenderDistance) && (rotatedRelativeWallRightWorldSpaceTileZ < player.camera.minRenderDistance)) {
-			return;
-		}
-		
-		// Assume that both sides of the wall are visible initially until otherwise determined
-		float visibleWallLeftWorldSpaceTileX = rotatedRelativeWallLeftWorldSpaceTileX;
-		float visibleWallLeftWorldSpaceTileZ = rotatedRelativeWallLeftWorldSpaceTileZ;
-		float visibleWallRightWorldSpaceTileX = rotatedRelativeWallRightWorldSpaceTileX;
-		float visibleWallRightWorldSpaceTileZ = rotatedRelativeWallRightWorldSpaceTileZ;
-		
-		// If the left side of the wall is behind the minimum render distance then work out the earliest point that can be seen infront of the minimum render distance
-		if(rotatedRelativeWallLeftWorldSpaceTileZ < player.camera.minRenderDistance) {
-			// Work out how much distance of the wall is not visible behind the minimum render distance
-			final float clippedZDepth = player.camera.minRenderDistance - rotatedRelativeWallLeftWorldSpaceTileZ;
-			// Work out the difference in Z values between the left and right sides of the wall
-			final float actualZDepth = rotatedRelativeWallRightWorldSpaceTileZ - rotatedRelativeWallLeftWorldSpaceTileZ;
-			// Calculate the percentage of the wall not visible behind the minimum render distance
-			final float clippedWallPercentage = clippedZDepth / actualZDepth;
-
-			// Calculate the first positions of the left hand side of the wall that is visible
-			visibleWallLeftWorldSpaceTileX = rotatedRelativeWallLeftWorldSpaceTileX + (rotatedRelativeWallRightWorldSpaceTileX - rotatedRelativeWallLeftWorldSpaceTileX) * clippedWallPercentage;
-			visibleWallLeftWorldSpaceTileZ = rotatedRelativeWallLeftWorldSpaceTileZ + (rotatedRelativeWallRightWorldSpaceTileZ - rotatedRelativeWallLeftWorldSpaceTileZ) * clippedWallPercentage;
-		} 
-		
-		// If the right side of the wall is behind the minimum render distance then work out the earliest point that can be seen infront of the minimum render distance
-		if(rotatedRelativeWallRightWorldSpaceTileZ < player.camera.minRenderDistance) {
-			// Work out how much distance of the wall is not visible behind the minimum render distance
-			final float clippedZDepth = player.camera.minRenderDistance - rotatedRelativeWallLeftWorldSpaceTileZ;
-			// Work out the difference in Z values between the left and right sides of the wall
-			final float actualZDepth = rotatedRelativeWallRightWorldSpaceTileZ - rotatedRelativeWallLeftWorldSpaceTileZ;
-			// Calculate the percentage of the wall not visible behind the minimum render distance
-			final float clippedWallPercentage = clippedZDepth / actualZDepth;
-
-			// Calculate the first positions of the right hand side of the wall that is visible
-			visibleWallRightWorldSpaceTileX = rotatedRelativeWallLeftWorldSpaceTileX + (rotatedRelativeWallRightWorldSpaceTileX - rotatedRelativeWallLeftWorldSpaceTileX) * clippedWallPercentage;
-			visibleWallRightWorldSpaceTileZ = rotatedRelativeWallLeftWorldSpaceTileZ + (rotatedRelativeWallRightWorldSpaceTileZ - rotatedRelativeWallLeftWorldSpaceTileZ) * clippedWallPercentage;
-		}
-
-		// Calculate the screen positions of the wall
-		final int actualScreenSpaceLeft = (int) ((visibleWallLeftWorldSpaceTileX / visibleWallLeftWorldSpaceTileZ) * renderPane.width + (renderPane.width / 2.0f));
-		final int actualScreenSpaceRight = (int) ((visibleWallRightWorldSpaceTileX / visibleWallRightWorldSpaceTileZ) * renderPane.width + (renderPane.width / 2.0f));
-		final float actualScreenWidth = (float) (actualScreenSpaceRight - actualScreenSpaceLeft);
-
-		// If the right hand side of the wall is being drawn to the left of the left hand side of the wall we are seeing the wall from behind, so don't render it
-		if(actualScreenSpaceLeft >= actualScreenSpaceRight) {
-			return;
-		}
-		
-		// Clip the screen space coordinates to the size of the render pane
-		final int screenSpaceLeft = actualScreenSpaceLeft < 0 ? 0 : actualScreenSpaceLeft;
-		final int screenSpaceRight = actualScreenSpaceRight > renderPane.width ? renderPane.width : actualScreenSpaceRight;
-		
-		// Calculate the screen position of the bottom and top of the wall at both the left and right sides
-		final int screenSpaceLeftTop = (int) ((wallTop / visibleWallLeftWorldSpaceTileZ) * renderPane.height + (renderPane.height / 2.0f));
-		final int screenSpaceLeftBottom = (int) ((wallBottom / visibleWallLeftWorldSpaceTileZ) * renderPane.height + (renderPane.height / 2.0f));
-		final int screenSpaceRightTop = (int) ((wallTop / visibleWallRightWorldSpaceTileZ) * renderPane.height + (renderPane.height / 2.0f));
-		final int screenSpaceRightBottom = (int) ((wallBottom / visibleWallRightWorldSpaceTileZ) * renderPane.height + (renderPane.height / 2.0f));
-		
-		// Now iterate through the visible columns of the wall to calculate the height of the wall at that X position, and draw the textured column
-		for(int screenSpaceX = screenSpaceLeft; screenSpaceX < screenSpaceRight; screenSpaceX++) {
-			// So we can interpolate the Z distance and also the sprite texture position, determine how far through the wall we are 
-			final float xPercentage = (float) (screenSpaceX - actualScreenSpaceLeft) / (actualScreenSpaceRight - actualScreenSpaceLeft);
-			final float currentZ = visibleWallLeftWorldSpaceTileZ + (visibleWallRightWorldSpaceTileZ - visibleWallLeftWorldSpaceTileZ) * xPercentage;
-			final int spritePixelX = (int) ((screenSpaceX - actualScreenSpaceLeft) / actualScreenWidth * sprite.width);
-
-			// Interpolate the known wall vertical positions to find the current wall height
-			final int currentActualWallTop = (int) (screenSpaceLeftTop + (screenSpaceRightTop - screenSpaceLeftTop) * xPercentage - 0.5);
-			final int currentActualWallBottom = (int) (screenSpaceLeftBottom + (screenSpaceRightBottom - screenSpaceLeftBottom) * xPercentage);
-			final float currentActualWallHeight = (float) (currentActualWallBottom - currentActualWallTop);
-			final int currentWallTop = currentActualWallTop < 0 ? 0 : currentActualWallTop;
-			final int currentWallBottom = currentActualWallBottom > renderPane.height ? renderPane.height : currentActualWallBottom;
+		for(int screenY = 0; screenY < renderPane.height; screenY++) {
+			final float relativeScreenY = (1.0f * screenY - halfScreenHeight) / renderPane.height;
+			final float verticalAngle = relativeScreenY / player.camera.minRenderDistance;
 			
-			// Now iterate through each row of the current wall column to draw the sprite texture at that point
-			for(int screenSpaceY = currentWallTop; screenSpaceY < currentWallBottom; screenSpaceY++) {
-				final int spritePixelY = (int) (((screenSpaceY - currentWallTop) + (currentWallTop - currentActualWallTop)) / currentActualWallHeight * sprite.height);
+			final boolean isFloor = (relativeScreenY >= 0);
+			float floorZDistance = isFloor ? (5 / verticalAngle) : -(5 / verticalAngle);
+			floorZDistance /= Math.cos(horizontalAngle);
+			
+			final float worldTileX = floorZDistance * (float) Math.sin(rayAngle) + cameraTileX;
+			final float worldTileZ = floorZDistance * (float) Math.cos(rayAngle) + cameraTileZ;
+			
+			final Tile currentTile = isFloor ? getLevelFloorTile((int) Math.floor(worldTileX), (int) Math.floor(worldTileZ)) : getLevelCeilingTile((int) Math.floor(worldTileX), (int) Math.floor(worldTileZ)); 
+			if(currentTile != null) {
+				final int spriteX = (int) ((worldTileX % 1) * currentTile.sprite.width);
+				final int spriteZ = (int) ((worldTileZ % 1) * currentTile.sprite.height);
 				
-				final int colour = sprite.pixels[spritePixelX + spritePixelY * sprite.width];
-				renderPane.setPixel(screenSpaceX, screenSpaceY, currentZ, colour);
-			}
-		}
-	}
-	
-	private void drawWallSurface(final RenderPane3D renderPane, final Sprite sprite, final int wallWorldSpaceTileX, final int wallWorldSpaceTileZ, final int wallWorldSpaceTileXLength, final int wallWorldSpaceTileZDepth) {
-		final float cameraAngleCos = (float) Math.cos(player.camera.angle);
-		final float cameraAngleSin = (float) Math.sin(player.camera.angle);
-		
-		// Calculate the left and right boundaries of the wall in world space
-		final float worldSpaceWallLeftX = wallWorldSpaceTileX * tileSize;
-		final float worldSpaceWallLeftZ = wallWorldSpaceTileZ * tileSize;
-		final float worldSpaceWallRightX = (wallWorldSpaceTileX + wallWorldSpaceTileXLength) * tileSize;
-		final float worldSpaceWallRightZ = (wallWorldSpaceTileZ + wallWorldSpaceTileZDepth) * tileSize;
-
-		// Calculate the position of the wall boundaries relative to the player in world space
-		final float relativeWorldSpaceWallLeftX = worldSpaceWallLeftX - player.camera.x;
-		final float relativeWorldSpaceWallLeftZ = worldSpaceWallLeftZ - player.camera.z;
-		final float relativeWorldSpaceWallRightX = worldSpaceWallRightX - player.camera.x;
-		final float relativeWorldSpaceWallRightZ = worldSpaceWallRightZ - player.camera.z;
-		
-		// Calculate the position of the wall boundaries relative to the player with the player's rotation
-		final float rotatedWorldSpaceWallLeftX = (cameraAngleCos * relativeWorldSpaceWallLeftX - cameraAngleSin * relativeWorldSpaceWallLeftZ);
-		final float rotatedWorldSpaceWallLeftZ = (cameraAngleSin * relativeWorldSpaceWallLeftX + cameraAngleCos * relativeWorldSpaceWallLeftZ);
-		final float rotatedWorldSpaceWallRightX = (cameraAngleCos * relativeWorldSpaceWallRightX - cameraAngleSin * relativeWorldSpaceWallRightZ);
-		final float rotatedWorldSpaceWallRightZ = (cameraAngleSin * relativeWorldSpaceWallRightX + cameraAngleCos * relativeWorldSpaceWallRightZ);
-
-		// If both the left and right boundaries of the wall are behind the camera then stop trying to render it
-		if((rotatedWorldSpaceWallLeftZ < player.camera.minRenderDistance) && (rotatedWorldSpaceWallRightZ < player.camera.minRenderDistance)) {
-			return;
-		}
-		
-		// Calculate the width and depth of the wall in world space (ignoring clipping)
-		final float actualWorldWallWidth = rotatedWorldSpaceWallRightX - rotatedWorldSpaceWallLeftX;
-		final float actualWorldWallDepth = rotatedWorldSpaceWallRightZ - rotatedWorldSpaceWallLeftZ;
-		
-		// Calculate the clipped position of the wall in world space
-		float clippedWorldSpaceLeftX = rotatedWorldSpaceWallLeftX;
-		float clippedWorldSpaceLeftZ = rotatedWorldSpaceWallLeftZ;
-		float clippedWorldSpaceRightX = rotatedWorldSpaceWallRightX;
-		float clippedWorldSpaceRightZ = rotatedWorldSpaceWallRightZ;
-		if(clippedWorldSpaceLeftZ < player.camera.minRenderDistance) {
-			// Calculate how much of the wall depth is behind the camera and use that to work how the relative position of the clipped point on the minimum render distance
-			final float clippedDepth = player.camera.minRenderDistance - clippedWorldSpaceLeftZ;
-			final float percentageClipped = clippedDepth / actualWorldWallDepth;
-
-			// Calculate the position of the clipped point
-			clippedWorldSpaceLeftX = clippedWorldSpaceLeftX + (percentageClipped * actualWorldWallWidth);
-			clippedWorldSpaceLeftZ = clippedWorldSpaceLeftZ + (percentageClipped * actualWorldWallDepth);
-		}
-		if(clippedWorldSpaceRightZ < player.camera.minRenderDistance) {
-			// Calculate how much of the wall depth is infront of the camera and use that to work how the relative position of the clipped point on the minimum render distance
-			final float clippedDepth = player.camera.minRenderDistance - clippedWorldSpaceLeftZ;
-			final float percentageClipped = clippedDepth / actualWorldWallDepth;
-
-			// Calculate the position of the clipped point
-			clippedWorldSpaceRightX = clippedWorldSpaceLeftX + (percentageClipped * actualWorldWallWidth);
-			clippedWorldSpaceRightZ = clippedWorldSpaceLeftZ + (percentageClipped * actualWorldWallDepth);
-		}
-		
-		// Calculate the screen position of the left and right boundaries of the wall
-		final float clipSpaceLeftX = player.camera.minRenderDistance * (clippedWorldSpaceLeftX * (tileSize / 2) / clippedWorldSpaceLeftZ);
-		final int screenSpaceLeftX = (int) (clipSpaceLeftX * renderPane.width + (renderPane.width / 2.0f));
-		final float clipSpaceRightX = player.camera.minRenderDistance * (clippedWorldSpaceRightX * (tileSize / 2) / clippedWorldSpaceRightZ);
-		final int screenSpaceRightX = (int) (clipSpaceRightX * renderPane.width + (renderPane.width / 2.0f));
-		final int screenSpaceWidth = screenSpaceRightX - screenSpaceLeftX;
-	
-		// If the right side of the wall is before the left side then we are on the wrong side to render it
-		if(screenSpaceLeftX >= screenSpaceRightX) {
-			return;
-		}
-		
-		// Calculate the left and right positions of the wall on the screen (clipped)
-		final int clippedScreenSpaceLeftX = screenSpaceLeftX < 0 ? 0 : screenSpaceLeftX;
-		final int clippedScreenSpaceRightX = screenSpaceRightX > renderPane.width ? renderPane.width : screenSpaceRightX;
-	
-		final float clipSpaceLeftTop = (ceilingTileHeight * tileSize / clippedWorldSpaceLeftZ) * player.camera.minRenderDistance;
-		final float clipSpaceLeftBottom = (floorTileDepth * tileSize / clippedWorldSpaceLeftZ) * player.camera.minRenderDistance;
-		final float clipSpaceRightTop = (ceilingTileHeight * tileSize / clippedWorldSpaceRightZ) * player.camera.minRenderDistance;
-		final float clipSpaceRightBottom = (floorTileDepth * tileSize / clippedWorldSpaceRightZ) * player.camera.minRenderDistance;
-		
-		final int screenSpaceLeftTop = (int) ((renderPane.height / 2.0f) - (renderPane.height * clipSpaceLeftTop));
-		final int screenSpaceLeftBottom = (int) ((renderPane.height / 2.0f) + (renderPane.height * clipSpaceLeftBottom));
-		final int screenSpaceRightTop = (int) ((renderPane.height / 2.0f) - (renderPane.height * clipSpaceRightTop));
-		final int screenSpaceRightBottom = (int) ((renderPane.height / 2.0f) + (renderPane.height * clipSpaceRightBottom));
-
-		// Iterate through each column of the wall on the screen
-		for(int screenSpaceX = clippedScreenSpaceLeftX; screenSpaceX < clippedScreenSpaceRightX; screenSpaceX++) {
-			final float percentAcrossWidth = (screenSpaceX - screenSpaceLeftX * 1.0f) / screenSpaceWidth;
-			final int spriteX = (int) (percentAcrossWidth * sprite.width);
-			
-			final float horizontalAngle = (screenSpaceX * 1.0f / renderPane.width) * player.camera.fovRadians - (player.camera.fovRadians / 2.0f);
-			final float currentClipSpaceZ = (rotatedWorldSpaceWallLeftZ + (percentAcrossWidth * actualWorldWallDepth)) / (float) Math.cos(horizontalAngle);
-			
-			final int currentScreenSpaceTop = (int) (percentAcrossWidth * (screenSpaceRightTop - screenSpaceLeftTop) + screenSpaceLeftTop);
-			final int currentScreenSpaceBottom = (int) (percentAcrossWidth * (screenSpaceRightBottom - screenSpaceLeftBottom) + screenSpaceLeftBottom);
-			final int currentScreenSpaceHeight = currentScreenSpaceBottom - currentScreenSpaceTop;
-			
-			final int currentClippedScreenSpaceTop = currentScreenSpaceTop < 0 ? 0 : currentScreenSpaceTop;
-			final int currentClippedScreenSpaceBottom = currentScreenSpaceBottom >= renderPane.height ? renderPane.height : currentScreenSpaceBottom;
-			
-			for(int screenSpaceY = currentClippedScreenSpaceTop; screenSpaceY < currentClippedScreenSpaceBottom; screenSpaceY++) {
-				final float percentAcrossHeight = (screenSpaceY - currentScreenSpaceTop * 1.0f) / currentScreenSpaceHeight;
-				final int spriteY = (int) (percentAcrossHeight * sprite.height);
+				int colour = currentTile.sprite.pixels[spriteX + spriteZ * currentTile.sprite.width];
+				if(spriteX == 0) colour = 0xffff0000;
+				if(spriteZ == 0) colour = 0xff00ff00;
 				
-				int colour = sprite.pixels[spriteX + spriteY * sprite.width];
-				if(spriteX == 0) colour = 0xffff00ff;
-				if(spriteY == 0) colour = 0xff00ff00;
-				
-				renderPane.setPixel(screenSpaceX, screenSpaceY, currentClipSpaceZ, colour);
-
-				if(screenSpaceX == 40 && screenSpaceY == 130) {
-					renderPane.setPixel(40, 130, 0xffffffff);
-				}
+				renderPane.setPixel(screenX, screenY, floorZDistance * tileSize, colour);
 			}
 		}
 	}
