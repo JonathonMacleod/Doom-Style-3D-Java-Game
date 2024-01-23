@@ -5,13 +5,10 @@ import utils.Wall;
 
 public class Camera {
 	
-	public final float fovRadians;
 	public float x, y, z, angle;
 	public final float minRenderDistance, maxRenderDistance;
 	
-	public Camera(float fovDegrees, float nearPlane, float farPlane) {
-		fovRadians = (float) Math.toRadians(fovDegrees);
-		
+	public Camera(float nearPlane, float farPlane) {
 		x = 0;
 		y = 0;
 		z = 0;

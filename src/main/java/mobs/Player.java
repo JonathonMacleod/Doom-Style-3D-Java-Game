@@ -12,14 +12,11 @@ public class Player extends Mob {
 	
 	public Player(Level level, float x, float y, float z) {
 		super(level, null, x, y, z);
-		camera = new Camera(90.0f, 0.1f, 250.0f);
+		camera = new Camera(0.1f, 250.0f);
 	}
 
 	@Override
 	public void update(InputHandler inputHandler, float delta) {
-		//TODO: Remove jumping
-//		camera.y = (float) Math.abs(Math.sin(Math.toRadians((System.currentTimeMillis() / 5) % 360))) * 16;
-		
 		// Apply rotation if the LEFT or RIGHT arrow keys are pressed
 		final float rotationSpeed = (float) ((2 * Math.PI) * 0.65f * delta);
 		if(inputHandler.keyStates[KeyEvent.VK_LEFT]) camera.angle -= rotationSpeed;

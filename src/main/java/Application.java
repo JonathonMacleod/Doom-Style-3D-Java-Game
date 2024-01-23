@@ -1,6 +1,8 @@
 import java.awt.Graphics;
 import java.awt.image.BufferStrategy;
 
+import graphics.Art;
+import graphics.Entity;
 import graphics.RenderPane3D;
 import ui.Window;
 import utils.Level;
@@ -126,6 +128,7 @@ public class Application {
 		if(currentLevel != null) {
 			renderPane.clear(currentLevel.player.camera.maxRenderDistance);
 			currentLevel.drawLevel(renderPane);
+			renderPane.drawEntity(currentLevel, new Entity(620, 0, 620, Art.MOB_WOLF_1));
 			renderPane.applyFog(currentLevel.player.camera.maxRenderDistance, 0xff010401, 0.3f);
 		}
 		// Apply fog to each pixel in the render pane based on the Z buffer distance to that pixel.
