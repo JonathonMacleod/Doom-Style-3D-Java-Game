@@ -32,6 +32,8 @@ public class RenderPane3D extends RenderPane {
 	
 	public void drawEntity(Level level, Entity entity) {
 		final Camera camera = level.player.camera;
+		final float cameraAngleSin = (float) Math.sin(-camera.angle);
+		final float cameraAngleCos = (float) Math.cos(-camera.angle);
 		
 		// Get the entity position relative to the camera
 		final float entityRelativeX = (float) (camera.x - entity.x);
@@ -39,10 +41,10 @@ public class RenderPane3D extends RenderPane {
 		final float entityRelativeZ = (float) (camera.z - entity.z);
 		
 		// Rotate the entity location around the camera (relative to the camera angle)
-		final float relativeEntityX = (float) ((entityRelativeX * Math.cos(-camera.angle)) + (entityRelativeZ * Math.sin(-camera.angle)));
+		final float relativeEntityX = (entityRelativeX * cameraAngleCos) + (entityRelativeZ * cameraAngleSin);
 		final float relativeEntityY = entityRelativeY;
-		final float relativeEntityZ = (float) -((entityRelativeZ * Math.cos(-camera.angle)) - (entityRelativeX * Math.sin(-camera.angle)));
-		
+		final float relativeEntityZ = -((entityRelativeZ * cameraAngleCos) - (entityRelativeX * cameraAngleSin));
+	
 		// Check that the entity is in-front of the camera
 		if(relativeEntityZ < camera.minRenderDistance) 
 			return;

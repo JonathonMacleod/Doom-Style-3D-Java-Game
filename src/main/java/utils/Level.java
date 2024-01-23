@@ -42,6 +42,10 @@ public class Level {
 	
 	public void drawLevel(RenderPane3D renderPane) {
 		drawWallsFloorAndCeiling(renderPane);
+		
+		for(Entity currentEntity : entities) {
+			renderPane.drawEntity(this, currentEntity);
+		}
 	}
 
 	public void resetPlayer() {
@@ -74,7 +78,7 @@ public class Level {
 				float tileX = x * tileSize + 16;
 				float tileZ = y * tileSize - 16;
 				
-				if(colour == 0xffff0000) entities.add(new Wolf(this, tileX, 11, tileZ));
+				if(colour == 0xffff0000) entities.add(new Wolf(this, tileX, 0, tileZ));
 				if(colour == 0xff0026ff) entities.add(new Ghost(this, tileX, 0, tileZ));
 			}
 		}
